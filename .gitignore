@@ -12,6 +12,18 @@ Thumbs.db
 build/
 out/
 *.class
+*.jar
+*.war
+
+# Kotlin
+.kotlin/
+
+# Android
+local.properties
+*.apk
+*.aab
+*.keystore
+.cxx/
 
 # Dependencies
 node_modules/
