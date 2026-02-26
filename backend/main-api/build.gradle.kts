@@ -41,6 +41,9 @@ dependencies {
     implementation(libs.postgresql)
     implementation(libs.hikari)
 
+    // JWT
+    implementation(libs.auth0.jwt)
+
     // Redis
     implementation(libs.lettuce)
 

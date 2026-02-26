@@ -1,6 +1,6 @@
 FROM gradle:8.11-jdk17 AS build
 WORKDIR /app
-COPY ../.. .
+COPY . .
 RUN gradle :backend:main-api:buildFatJar --no-daemon
 
 FROM eclipse-temurin:17-jre-alpine

@@ -368,9 +368,9 @@ VALUES (
 -- ---- 1. 김치볶음밥 ----
 INSERT INTO recipe_ingredients (recipe_id, ingredient_id, quantity, is_essential)
 VALUES
-    ((SELECT id FROM recipes WHERE title = '김치볶음밥'), (SELECT id FROM ingredient_master WHERE name = '김치'), '200g', TRUE),
-    ((SELECT id FROM recipes WHERE title = '김치볶음밥'), (SELECT id FROM ingredient_master WHERE name = '밥'), '1공기', TRUE),
-    ((SELECT id FROM recipes WHERE title = '김치볶음밥'), (SELECT id FROM ingredient_master WHERE name = '계란'), '1개', FALSE),
+    ((SELECT id FROM recipes WHERE title = '김치볶음밥'), (SELECT id FROM ingredient_master WHERE name = '배추김치'), '200g', TRUE),
+    ((SELECT id FROM recipes WHERE title = '김치볶음밥'), (SELECT id FROM ingredient_master WHERE name = '쌀'), '1공기', TRUE),
+    ((SELECT id FROM recipes WHERE title = '김치볶음밥'), (SELECT id FROM ingredient_master WHERE name = '달걀'), '1개', FALSE),
     ((SELECT id FROM recipes WHERE title = '김치볶음밥'), (SELECT id FROM ingredient_master WHERE name = '대파'), '1/2대', FALSE),
     ((SELECT id FROM recipes WHERE title = '김치볶음밥'), (SELECT id FROM ingredient_master WHERE name = '고추장'), '1큰술', FALSE),
     ((SELECT id FROM recipes WHERE title = '김치볶음밥'), (SELECT id FROM ingredient_master WHERE name = '참기름'), '1큰술', FALSE)
@@ -391,7 +391,7 @@ ON CONFLICT DO NOTHING;
 -- ---- 3. 제육볶음 ----
 INSERT INTO recipe_ingredients (recipe_id, ingredient_id, quantity, is_essential)
 VALUES
-    ((SELECT id FROM recipes WHERE title = '제육볶음'), (SELECT id FROM ingredient_master WHERE name = '돼지고기'), '300g', TRUE),
+    ((SELECT id FROM recipes WHERE title = '제육볶음'), (SELECT id FROM ingredient_master WHERE name = '돼지고기(제육용)'), '300g', TRUE),
     ((SELECT id FROM recipes WHERE title = '제육볶음'), (SELECT id FROM ingredient_master WHERE name = '고추장'), '2큰술', TRUE),
     ((SELECT id FROM recipes WHERE title = '제육볶음'), (SELECT id FROM ingredient_master WHERE name = '고춧가루'), '1큰술', TRUE),
     ((SELECT id FROM recipes WHERE title = '제육볶음'), (SELECT id FROM ingredient_master WHERE name = '간장'), '1큰술', TRUE),
@@ -404,7 +404,7 @@ ON CONFLICT DO NOTHING;
 -- ---- 4. 계란말이 ----
 INSERT INTO recipe_ingredients (recipe_id, ingredient_id, quantity, is_essential)
 VALUES
-    ((SELECT id FROM recipes WHERE title = '계란말이'), (SELECT id FROM ingredient_master WHERE name = '계란'), '4개', TRUE),
+    ((SELECT id FROM recipes WHERE title = '계란말이'), (SELECT id FROM ingredient_master WHERE name = '달걀'), '4개', TRUE),
     ((SELECT id FROM recipes WHERE title = '계란말이'), (SELECT id FROM ingredient_master WHERE name = '당근'), '1/4개', FALSE),
     ((SELECT id FROM recipes WHERE title = '계란말이'), (SELECT id FROM ingredient_master WHERE name = '대파'), '1/2대', FALSE),
     ((SELECT id FROM recipes WHERE title = '계란말이'), (SELECT id FROM ingredient_master WHERE name = '소금'), '약간', TRUE)
@@ -413,8 +413,8 @@ ON CONFLICT DO NOTHING;
 -- ---- 5. 김치찌개 ----
 INSERT INTO recipe_ingredients (recipe_id, ingredient_id, quantity, is_essential)
 VALUES
-    ((SELECT id FROM recipes WHERE title = '김치찌개'), (SELECT id FROM ingredient_master WHERE name = '김치'), '200g', TRUE),
-    ((SELECT id FROM recipes WHERE title = '김치찌개'), (SELECT id FROM ingredient_master WHERE name = '돼지고기'), '150g', TRUE),
+    ((SELECT id FROM recipes WHERE title = '김치찌개'), (SELECT id FROM ingredient_master WHERE name = '배추김치'), '200g', TRUE),
+    ((SELECT id FROM recipes WHERE title = '김치찌개'), (SELECT id FROM ingredient_master WHERE name = '돼지고기(제육용)'), '150g', TRUE),
     ((SELECT id FROM recipes WHERE title = '김치찌개'), (SELECT id FROM ingredient_master WHERE name = '두부'), '1/2모', FALSE),
     ((SELECT id FROM recipes WHERE title = '김치찌개'), (SELECT id FROM ingredient_master WHERE name = '대파'), '1대', FALSE),
     ((SELECT id FROM recipes WHERE title = '김치찌개'), (SELECT id FROM ingredient_master WHERE name = '고춧가루'), '1큰술', FALSE),
@@ -425,12 +425,12 @@ ON CONFLICT DO NOTHING;
 -- ---- 6. 불고기 ----
 INSERT INTO recipe_ingredients (recipe_id, ingredient_id, quantity, is_essential)
 VALUES
-    ((SELECT id FROM recipes WHERE title = '불고기'), (SELECT id FROM ingredient_master WHERE name = '소고기'), '400g', TRUE),
+    ((SELECT id FROM recipes WHERE title = '불고기'), (SELECT id FROM ingredient_master WHERE name = '소고기(불고기용)'), '400g', TRUE),
     ((SELECT id FROM recipes WHERE title = '불고기'), (SELECT id FROM ingredient_master WHERE name = '간장'), '4큰술', TRUE),
     ((SELECT id FROM recipes WHERE title = '불고기'), (SELECT id FROM ingredient_master WHERE name = '설탕'), '2큰술', TRUE),
     ((SELECT id FROM recipes WHERE title = '불고기'), (SELECT id FROM ingredient_master WHERE name = '배'), '1/2개', FALSE),
     ((SELECT id FROM recipes WHERE title = '불고기'), (SELECT id FROM ingredient_master WHERE name = '양파'), '1개', FALSE),
-    ((SELECT id FROM recipes WHERE title = '불고기'), (SELECT id FROM ingredient_master WHERE name = '버섯'), '100g', FALSE),
+    ((SELECT id FROM recipes WHERE title = '불고기'), (SELECT id FROM ingredient_master WHERE name = '표고버섯'), '100g', FALSE),
     ((SELECT id FROM recipes WHERE title = '불고기'), (SELECT id FROM ingredient_master WHERE name = '당근'), '1/2개', FALSE),
     ((SELECT id FROM recipes WHERE title = '불고기'), (SELECT id FROM ingredient_master WHERE name = '대파'), '1대', FALSE),
     ((SELECT id FROM recipes WHERE title = '불고기'), (SELECT id FROM ingredient_master WHERE name = '마늘'), '1큰술', FALSE),
@@ -441,11 +441,11 @@ ON CONFLICT DO NOTHING;
 INSERT INTO recipe_ingredients (recipe_id, ingredient_id, quantity, is_essential)
 VALUES
     ((SELECT id FROM recipes WHERE title = '잡채'), (SELECT id FROM ingredient_master WHERE name = '당면'), '200g', TRUE),
-    ((SELECT id FROM recipes WHERE title = '잡채'), (SELECT id FROM ingredient_master WHERE name = '소고기'), '150g', FALSE),
+    ((SELECT id FROM recipes WHERE title = '잡채'), (SELECT id FROM ingredient_master WHERE name = '소고기(불고기용)'), '150g', FALSE),
     ((SELECT id FROM recipes WHERE title = '잡채'), (SELECT id FROM ingredient_master WHERE name = '시금치'), '100g', FALSE),
     ((SELECT id FROM recipes WHERE title = '잡채'), (SELECT id FROM ingredient_master WHERE name = '당근'), '1/2개', FALSE),
     ((SELECT id FROM recipes WHERE title = '잡채'), (SELECT id FROM ingredient_master WHERE name = '양파'), '1/2개', FALSE),
-    ((SELECT id FROM recipes WHERE title = '잡채'), (SELECT id FROM ingredient_master WHERE name = '버섯'), '100g', FALSE),
+    ((SELECT id FROM recipes WHERE title = '잡채'), (SELECT id FROM ingredient_master WHERE name = '표고버섯'), '100g', FALSE),
     ((SELECT id FROM recipes WHERE title = '잡채'), (SELECT id FROM ingredient_master WHERE name = '간장'), '3큰술', TRUE),
     ((SELECT id FROM recipes WHERE title = '잡채'), (SELECT id FROM ingredient_master WHERE name = '설탕'), '1.5큰술', TRUE),
     ((SELECT id FROM recipes WHERE title = '잡채'), (SELECT id FROM ingredient_master WHERE name = '참기름'), '2큰술', TRUE)
@@ -454,14 +454,14 @@ ON CONFLICT DO NOTHING;
 -- ---- 8. 비빔밥 ----
 INSERT INTO recipe_ingredients (recipe_id, ingredient_id, quantity, is_essential)
 VALUES
-    ((SELECT id FROM recipes WHERE title = '비빔밥'), (SELECT id FROM ingredient_master WHERE name = '밥'), '1공기', TRUE),
+    ((SELECT id FROM recipes WHERE title = '비빔밥'), (SELECT id FROM ingredient_master WHERE name = '쌀'), '1공기', TRUE),
     ((SELECT id FROM recipes WHERE title = '비빔밥'), (SELECT id FROM ingredient_master WHERE name = '고추장'), '2큰술', TRUE),
     ((SELECT id FROM recipes WHERE title = '비빔밥'), (SELECT id FROM ingredient_master WHERE name = '시금치'), '100g', FALSE),
     ((SELECT id FROM recipes WHERE title = '비빔밥'), (SELECT id FROM ingredient_master WHERE name = '콩나물'), '100g', FALSE),
     ((SELECT id FROM recipes WHERE title = '비빔밥'), (SELECT id FROM ingredient_master WHERE name = '당근'), '1/2개', FALSE),
     ((SELECT id FROM recipes WHERE title = '비빔밥'), (SELECT id FROM ingredient_master WHERE name = '애호박'), '1/3개', FALSE),
-    ((SELECT id FROM recipes WHERE title = '비빔밥'), (SELECT id FROM ingredient_master WHERE name = '소고기'), '100g', FALSE),
-    ((SELECT id FROM recipes WHERE title = '비빔밥'), (SELECT id FROM ingredient_master WHERE name = '계란'), '1개', FALSE),
+    ((SELECT id FROM recipes WHERE title = '비빔밥'), (SELECT id FROM ingredient_master WHERE name = '소고기(불고기용)'), '100g', FALSE),
+    ((SELECT id FROM recipes WHERE title = '비빔밥'), (SELECT id FROM ingredient_master WHERE name = '달걀'), '1개', FALSE),
     ((SELECT id FROM recipes WHERE title = '비빔밥'), (SELECT id FROM ingredient_master WHERE name = '참기름'), '1큰술', TRUE)
 ON CONFLICT DO NOTHING;
 
@@ -475,14 +475,14 @@ VALUES
     ((SELECT id FROM recipes WHERE title = '떡볶이'), (SELECT id FROM ingredient_master WHERE name = '간장'), '1큰술', TRUE),
     ((SELECT id FROM recipes WHERE title = '떡볶이'), (SELECT id FROM ingredient_master WHERE name = '설탕'), '2큰술', TRUE),
     ((SELECT id FROM recipes WHERE title = '떡볶이'), (SELECT id FROM ingredient_master WHERE name = '대파'), '1대', FALSE),
-    ((SELECT id FROM recipes WHERE title = '떡볶이'), (SELECT id FROM ingredient_master WHERE name = '계란'), '2개', FALSE)
+    ((SELECT id FROM recipes WHERE title = '떡볶이'), (SELECT id FROM ingredient_master WHERE name = '달걀'), '2개', FALSE)
 ON CONFLICT DO NOTHING;
 
 -- ---- 10. 순두부찌개 ----
 INSERT INTO recipe_ingredients (recipe_id, ingredient_id, quantity, is_essential)
 VALUES
     ((SELECT id FROM recipes WHERE title = '순두부찌개'), (SELECT id FROM ingredient_master WHERE name = '순두부'), '1봉', TRUE),
-    ((SELECT id FROM recipes WHERE title = '순두부찌개'), (SELECT id FROM ingredient_master WHERE name = '계란'), '1개', FALSE),
+    ((SELECT id FROM recipes WHERE title = '순두부찌개'), (SELECT id FROM ingredient_master WHERE name = '달걀'), '1개', FALSE),
     ((SELECT id FROM recipes WHERE title = '순두부찌개'), (SELECT id FROM ingredient_master WHERE name = '새우'), '50g', FALSE),
     ((SELECT id FROM recipes WHERE title = '순두부찌개'), (SELECT id FROM ingredient_master WHERE name = '바지락'), '100g', FALSE),
     ((SELECT id FROM recipes WHERE title = '순두부찌개'), (SELECT id FROM ingredient_master WHERE name = '고춧가루'), '1큰술', TRUE),
@@ -503,7 +503,7 @@ ON CONFLICT DO NOTHING;
 INSERT INTO recipe_ingredients (recipe_id, ingredient_id, quantity, is_essential)
 VALUES
     ((SELECT id FROM recipes WHERE title = '미역국'), (SELECT id FROM ingredient_master WHERE name = '미역'), '20g(건)', TRUE),
-    ((SELECT id FROM recipes WHERE title = '미역국'), (SELECT id FROM ingredient_master WHERE name = '소고기'), '100g', TRUE),
+    ((SELECT id FROM recipes WHERE title = '미역국'), (SELECT id FROM ingredient_master WHERE name = '소고기(불고기용)'), '100g', TRUE),
     ((SELECT id FROM recipes WHERE title = '미역국'), (SELECT id FROM ingredient_master WHERE name = '참기름'), '1큰술', TRUE),
     ((SELECT id FROM recipes WHERE title = '미역국'), (SELECT id FROM ingredient_master WHERE name = '마늘'), '1큰술', FALSE),
     ((SELECT id FROM recipes WHERE title = '미역국'), (SELECT id FROM ingredient_master WHERE name = '간장'), '1큰술', TRUE)
@@ -512,7 +512,7 @@ ON CONFLICT DO NOTHING;
 -- ---- 13. 닭볶음탕 ----
 INSERT INTO recipe_ingredients (recipe_id, ingredient_id, quantity, is_essential)
 VALUES
-    ((SELECT id FROM recipes WHERE title = '닭볶음탕'), (SELECT id FROM ingredient_master WHERE name = '닭'), '1마리', TRUE),
+    ((SELECT id FROM recipes WHERE title = '닭볶음탕'), (SELECT id FROM ingredient_master WHERE name = '닭한마리'), '1마리', TRUE),
     ((SELECT id FROM recipes WHERE title = '닭볶음탕'), (SELECT id FROM ingredient_master WHERE name = '감자'), '2개', FALSE),
     ((SELECT id FROM recipes WHERE title = '닭볶음탕'), (SELECT id FROM ingredient_master WHERE name = '당근'), '1개', FALSE),
     ((SELECT id FROM recipes WHERE title = '닭볶음탕'), (SELECT id FROM ingredient_master WHERE name = '양파'), '1개', FALSE),
@@ -560,7 +560,7 @@ ON CONFLICT DO NOTHING;
 -- ---- 17. 부대찌개 ----
 INSERT INTO recipe_ingredients (recipe_id, ingredient_id, quantity, is_essential)
 VALUES
-    ((SELECT id FROM recipes WHERE title = '부대찌개'), (SELECT id FROM ingredient_master WHERE name = '김치'), '150g', TRUE),
+    ((SELECT id FROM recipes WHERE title = '부대찌개'), (SELECT id FROM ingredient_master WHERE name = '배추김치'), '150g', TRUE),
     ((SELECT id FROM recipes WHERE title = '부대찌개'), (SELECT id FROM ingredient_master WHERE name = '두부'), '1/2모', FALSE),
     ((SELECT id FROM recipes WHERE title = '부대찌개'), (SELECT id FROM ingredient_master WHERE name = '양파'), '1/2개', FALSE),
     ((SELECT id FROM recipes WHERE title = '부대찌개'), (SELECT id FROM ingredient_master WHERE name = '대파'), '1대', FALSE),
@@ -596,7 +596,7 @@ ON CONFLICT DO NOTHING;
 -- ---- 20. 갈비찜 ----
 INSERT INTO recipe_ingredients (recipe_id, ingredient_id, quantity, is_essential)
 VALUES
-    ((SELECT id FROM recipes WHERE title = '갈비찜'), (SELECT id FROM ingredient_master WHERE name = '소갈비'), '1kg', TRUE),
+    ((SELECT id FROM recipes WHERE title = '갈비찜'), (SELECT id FROM ingredient_master WHERE name = '소고기(갈비)'), '1kg', TRUE),
     ((SELECT id FROM recipes WHERE title = '갈비찜'), (SELECT id FROM ingredient_master WHERE name = '간장'), '6큰술', TRUE),
     ((SELECT id FROM recipes WHERE title = '갈비찜'), (SELECT id FROM ingredient_master WHERE name = '설탕'), '3큰술', TRUE),
     ((SELECT id FROM recipes WHERE title = '갈비찜'), (SELECT id FROM ingredient_master WHERE name = '배'), '1/2개', FALSE),
