@@ -6,10 +6,7 @@ import com.fridgerecipe.domain.service.RecipeService
 import io.ktor.http.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import org.koin.ktor.ext.inject
-
-fun Route.recipeRoutes() {
-    val recipeService by inject<RecipeService>()
+fun Route.recipeRoutes(recipeService: RecipeService) {
 
     route("/recipes") {
         get("/recommend") {

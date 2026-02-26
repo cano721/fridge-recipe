@@ -8,8 +8,6 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.serialization.Serializable
-import org.koin.ktor.ext.inject
-
 @Serializable
 data class IngredientRegisterRequest(
     val ingredientId: Long,
@@ -38,8 +36,7 @@ data class IngredientUpdateRequest(
 @Serializable
 data class DeleteBatchRequest(val ids: List<Long>)
 
-fun Route.ingredientRoutes() {
-    val ingredientService by inject<IngredientService>()
+fun Route.ingredientRoutes(ingredientService: IngredientService) {
 
     route("/ingredients") {
         // 목록 조회

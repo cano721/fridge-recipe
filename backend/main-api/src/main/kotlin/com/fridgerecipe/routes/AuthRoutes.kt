@@ -8,8 +8,6 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.serialization.Serializable
-import org.koin.ktor.ext.inject
-
 @Serializable
 data class LoginRequest(val provider: String, val accessToken: String, val deviceInfo: String? = null)
 
@@ -22,8 +20,7 @@ data class TokenResponse(val accessToken: String, val refreshToken: String, val 
 @Serializable
 data class ApiSuccess<T>(val success: Boolean = true, val data: T)
 
-fun Route.authRoutes() {
-    val authService by inject<AuthService>()
+fun Route.authRoutes(authService: AuthService) {
 
     route("/auth") {
         post("/login") {

@@ -9,8 +9,6 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.serialization.Serializable
-import org.koin.ktor.ext.inject
-
 @Serializable
 data class NotificationSettingRequest(
     val expiryEnabled: Boolean? = null,
@@ -24,8 +22,7 @@ data class DeviceTokenRequest(
     val platform: String
 )
 
-fun Route.notificationRoutes() {
-    val notificationService by inject<NotificationService>()
+fun Route.notificationRoutes(notificationService: NotificationService) {
 
     route("/notifications") {
         get("/settings") {

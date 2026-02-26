@@ -1,0 +1,131 @@
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css');
+@import "tailwindcss";
+
+@theme {
+  /* Primary: Herb Green */
+  --color-primary-50: #F0FAF0;
+  --color-primary-100: #DCEFDC;
+  --color-primary-200: #B8DFB8;
+  --color-primary-300: #8FCC8F;
+  --color-primary-400: #5FB85F;
+  --color-primary: #3DA63D;
+  --color-primary-600: #2E8C2E;
+  --color-primary-700: #226622;
+  --color-primary-800: #174717;
+  --color-primary-900: #0D2A0D;
+  --color-primary-dark: #226622;
+  --color-primary-light: #8FCC8F;
+
+  /* Secondary: Warm Apricot */
+  --color-secondary-50: #FFF8F0;
+  --color-secondary-100: #FEECD8;
+  --color-secondary-200: #FFD9B3;
+  --color-secondary-300: #F9C47F;
+  --color-secondary-400: #FFB366;
+  --color-secondary: #F08C1A;
+  --color-secondary-600: #CC7010;
+  --color-secondary-700: #A5560A;
+  --color-secondary-800: #CC6B00;
+  --color-secondary-900: #994F00;
+  --color-secondary-light: #F9C47F;
+
+  /* Accent: Tomato Red */
+  --color-accent: #E8321E;
+
+  /* Semantic */
+  --color-success: #388E3C;
+  --color-success-container: #C8E6C9;
+  --color-warning: #EF6C00;
+  --color-warning-container: #FFE0B2;
+  --color-danger: #C62828;
+  --color-danger-container: #FFCDD2;
+  --color-info: #1565C0;
+  --color-info-container: #BBDEFB;
+
+  /* Expiry Status */
+  --color-safe: #4CAF50;
+  --color-soon: #FF9800;
+  --color-urgent: #F44336;
+  --color-expired: #757575;
+
+  /* Surface */
+  --color-background: #FAFAF8;
+  --color-surface: #FFFFFF;
+  --color-surface-variant: #F4F4F0;
+  --color-on-surface: #1A1A18;
+  --color-on-surface-variant: #4A4A44;
+  --color-outline: #BDBDB5;
+  --color-outline-variant: #E0E0D8;
+  --color-inverse-surface: #2E2E2A;
+  --color-inverse-on-surface: #E8E8E4;
+  --color-inverse-primary: #6EC96E;
+
+  /* Font */
+  --font-sans: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+}
+
+:root {
+  /* Elevation Shadows */
+  --shadow-level-1: 0px 1px 2px rgba(0,0,0,0.08);
+  --shadow-level-2: 0px 2px 6px rgba(0,0,0,0.10);
+  --shadow-level-3: 0px 4px 12px rgba(0,0,0,0.12);
+  --shadow-level-4: 0px 6px 18px rgba(0,0,0,0.14);
+  --shadow-level-5: 0px 8px 24px rgba(0,0,0,0.16);
+
+  /* Motion Duration */
+  --duration-xfast: 50ms;
+  --duration-fast: 100ms;
+  --duration-short: 150ms;
+  --duration-normal: 200ms;
+  --duration-medium: 300ms;
+  --duration-long: 400ms;
+  --duration-xlong: 500ms;
+
+  /* Motion Easing */
+  --ease-enter: cubic-bezier(0.0, 0.0, 0.2, 1.0);
+  --ease-exit: cubic-bezier(0.4, 0.0, 1.0, 1.0);
+  --ease-standard: cubic-bezier(0.2, 0.0, 0.0, 1.0);
+  --ease-emphasized: cubic-bezier(0.2, 0.0, 0.0, 1.0);
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--color-background);
+  color: var(--color-on-surface);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Skeleton Shimmer Animation */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.skeleton-shimmer {
+  background: linear-gradient(
+    135deg,
+    #E8E8E4 25%,
+    #F4F4F0 50%,
+    #E8E8E4 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+/* Motion Reduce */
+@media (prefers-reduced-motion: reduce) {
+  .skeleton-shimmer {
+    animation: none;
+    background: #E8E8E4;
+  }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Bottom Sheet Scrim */
+.scrim {
+  background-color: rgba(0, 0, 0, 0.4);
+}

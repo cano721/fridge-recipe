@@ -513,4 +513,4 @@ VALUES
         'manual'
     )
 
-ON CONFLICT (title) DO NOTHING;
+;

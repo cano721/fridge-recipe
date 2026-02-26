@@ -11,8 +11,6 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.lettuce.core.RedisClient
 import kotlinx.serialization.Serializable
-import org.koin.ktor.ext.inject
-
 @Serializable
 data class HealthResponse(
     val status: String,
@@ -21,8 +19,7 @@ data class HealthResponse(
     val aiService: String
 )
 
-fun Route.healthRoutes() {
-    val config by inject<AppConfig>()
+fun Route.healthRoutes(config: AppConfig) {
 
     get("/health") {
         val dbStatus = try {
