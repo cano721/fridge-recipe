@@ -18,6 +18,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -328,6 +331,116 @@ private fun RecipeCardSection() {
     }
 }
 
+// ─── TextField ───────────────────────────────────────────────
+
+@Composable
+private fun TextFieldSection() {
+    SectionHeader("Text Field")
+
+    var text1 by remember { mutableStateOf("") }
+    FridgeRecipeTextField(
+        value = text1,
+        onValueChange = { text1 = it },
+        label = "재료 이름",
+        placeholder = "예: 당근, 양파",
+    )
+
+    Spacer(modifier = Modifier.height(12.dp))
+
+    FridgeRecipeTextField(
+        value = "잘못된 입력",
+        onValueChange = {},
+        label = "수량",
+        isError = true,
+        errorMessage = "숫자만 입력할 수 있어요",
+    )
+}
+
+// ─── FAB ─────────────────────────────────────────────────────
+
+@Composable
+private fun FabSection() {
+    SectionHeader("FAB (Floating Action Button)")
+
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            FridgeRecipeFab(
+                icon = Icons.Default.Add,
+                contentDescription = "재료 추가",
+                onClick = {},
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text("Standard", style = MaterialTheme.typography.labelSmall)
+        }
+
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            FridgeRecipeSmallFab(
+                icon = Icons.Default.CameraAlt,
+                contentDescription = "카메라",
+                onClick = {},
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text("Small", style = MaterialTheme.typography.labelSmall)
+        }
+    }
+}
+
+// ─── Skeleton ────────────────────────────────────────────────
+
+@Composable
+private fun SkeletonSection() {
+    SectionHeader("Skeleton / Shimmer")
+
+    Text("Ingredient Card Skeleton", style = MaterialTheme.typography.titleSmall)
+    Spacer(modifier = Modifier.height(8.dp))
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        IngredientCardSkeleton()
+        IngredientCardSkeleton()
+    }
+
+    Spacer(modifier = Modifier.height(16.dp))
+    Text("Recipe Card Skeleton", style = MaterialTheme.typography.titleSmall)
+    Spacer(modifier = Modifier.height(8.dp))
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        RecipeCardSkeleton(modifier = Modifier.weight(1f))
+        RecipeCardSkeleton(modifier = Modifier.weight(1f))
+    }
+}
+
+// ─── Error State ─────────────────────────────────────────────
+
+@Composable
+private fun ErrorStateSection() {
+    SectionHeader("Error State")
+
+    Text("Inline Error", style = MaterialTheme.typography.titleSmall)
+    Spacer(modifier = Modifier.height(8.dp))
+    InlineError(message = "수량을 입력해주세요")
+
+    Spacer(modifier = Modifier.height(16.dp))
+    Text("Network Error Banner", style = MaterialTheme.typography.titleSmall)
+    Spacer(modifier = Modifier.height(8.dp))
+    NetworkErrorBanner()
+}
+
+// ─── Bottom Navigation ──────────────────────────────────────
+
+@Composable
+private fun BottomNavSection() {
+    SectionHeader("Bottom Navigation Bar")
+
+    FridgeRecipeBottomNavBar(
+        selectedRoute = "home",
+        onItemSelected = {},
+    )
+}
+
 // ─── Empty State ─────────────────────────────────────────────
 
 @Composable
@@ -383,12 +496,17 @@ fun DesignSystemCatalog(modifier: Modifier = Modifier) {
         ColorPaletteSection()
         TypographySection()
         ButtonSection()
+        TextFieldSection()
         ExpiryBadgeSection()
         ChipSection()
         SearchFieldSection()
+        FabSection()
         CardSection()
         RecipeCardSection()
+        SkeletonSection()
+        ErrorStateSection()
         EmptyStateSection()
+        BottomNavSection()
 
         Spacer(modifier = Modifier.height(32.dp))
     }

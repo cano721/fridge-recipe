@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>냉장고 레시피 - Design System Catalog</title>
+<style>
+  :root {
+    /* Primary: Herb Green */
+    --primary-50: #F0FAF0; --primary-100: #DCEFDC; --primary-200: #B8DFB8;
+    --primary-300: #8FCC8F; --primary-400: #5FB85F; --primary-500: #3DA63D;
+    --primary-600: #2E8C2E; --primary-700: #226622; --primary-800: #174717;
+    --primary-900: #0D2A0D;
+    /* Secondary: Warm Apricot */
+    --secondary-50: #FFF8F0; --secondary-100: #FEECD8; --secondary-200: #FFD9B3;
+    --secondary-300: #F9C47F; --secondary-400: #FFB366; --secondary-500: #F08C1A;
+    --secondary-600: #CC7010; --secondary-700: #A5560A; --secondary-800: #CC6B00;
+    --secondary-900: #994F00;
+    /* Accent */
+    --accent-500: #E8321E; --accent-dark: #FF6B5C;
+    /* Semantic */
+    --success: #388E3C; --success-container: #C8E6C9;
+    --warning: #EF6C00; --warning-container: #FFE0B2;
+    --error: #C62828; --error-container: #FFCDD2;
+    --info: #1565C0; --info-container: #BBDEFB;
+    /* Expiry */
+    --expiry-safe: #4CAF50; --expiry-soon: #FF9800;
+    --expiry-urgent: #F44336; --expiry-expired: #757575;
+    /* Surface (Light) */
+    --background: #FAFAF8; --surface: #FFFFFF; --surface-variant: #F4F4F0;
+    --on-background: #1A1A18; --on-surface: #1A1A18;
+    --on-surface-variant: #4A4A44; --outline: #BDBDB5;
+    --outline-variant: #E0E0D8;
+    --inverse-surface: #2E2E2A; --inverse-on-surface: #E8E8E4;
+    --inverse-primary: #6EC96E;
+    /* Spacing */
+    --sp-xxs: 2px; --sp-xs: 4px; --sp-sm: 8px; --sp-md: 12px;
+    --sp-base: 16px; --sp-lg: 20px; --sp-xl: 24px; --sp-xxl: 32px;
+    /* Border Radius */
+    --radius-xs: 4px; --radius-sm: 8px; --radius-md: 12px;
+    --radius-lg: 16px; --radius-xl: 20px; --radius-xxl: 28px;
+    --radius-full: 9999px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Pretendard Variable', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--background);
+    color: var(--on-background);
+    line-height: 1.5;
+    max-width: 960px;
+    margin: 0 auto;
+    padding: var(--sp-base);
+  }
+
+  /* Theme Toggle */
+  body.dark {
+    --background: #121210; --surface: #1E1E1C; --surface-variant: #2A2A28;
+    --on-background: #E8E8E4; --on-surface: #E8E8E4;
+    --on-surface-variant: #A0A09A; --outline: #5A5A54;
+    --outline-variant: #3A3A36;
+    --inverse-surface: #E8E8E4; --inverse-on-surface: #2E2E2A;
+    --inverse-primary: #226622;
+    --error-container: #B71C1C;
+  }
+
+  .theme-toggle {
+    position: fixed; top: 16px; right: 16px; z-index: 100;
+    padding: 8px 16px; border-radius: var(--radius-md);
+    background: var(--inverse-surface); color: var(--inverse-on-surface);
+    border: none; cursor: pointer; font-size: 14px; font-weight: 500;
+  }
+
+  h1 { font-size: 32px; font-weight: 600; margin-bottom: 4px; }
+  .subtitle { font-size: 14px; color: var(--on-surface-variant); margin-bottom: 32px; }
+
+  .section { margin-bottom: 40px; }
+  .section-title {
+    font-size: 24px; font-weight: 600; color: var(--primary-500);
+    border-bottom: 1px solid var(--outline-variant);
+    padding-bottom: 8px; margin-bottom: 16px;
+  }
+  .sub-title { font-size: 14px; font-weight: 500; margin-bottom: 8px; color: var(--on-surface); }
+
+  /* ─── Color Palette ────────────────────────── */
+  .color-grid {
+    display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px;
+  }
+  .color-swatch {
+    display: flex; flex-direction: column; align-items: center;
+  }
+  .color-swatch .box {
+    width: 48px; height: 48px; border-radius: var(--radius-sm);
+    border: 0.5px solid rgba(0,0,0,0.1);
+  }
+  .color-swatch .label {
+    font-size: 11px; color: var(--on-surface-variant); margin-top: 4px;
+  }
+
+  /* ─── Typography ───────────────────────────── */
+  .type-sample { margin-bottom: 4px; }
+  .type-dl { font-size: 57px; font-weight: 400; line-height: 64px; letter-spacing: -0.25px; }
+  .type-hl { font-size: 32px; font-weight: 600; line-height: 40px; }
+  .type-hm { font-size: 28px; font-weight: 600; line-height: 36px; }
+  .type-hs { font-size: 24px; font-weight: 600; line-height: 32px; }
+  .type-tl { font-size: 22px; font-weight: 600; line-height: 28px; }
+  .type-tm { font-size: 16px; font-weight: 500; line-height: 24px; letter-spacing: 0.15px; }
+  .type-ts { font-size: 14px; font-weight: 500; line-height: 20px; letter-spacing: 0.1px; }
+  .type-bl { font-size: 16px; font-weight: 400; line-height: 24px; letter-spacing: 0.5px; }
+  .type-bm { font-size: 14px; font-weight: 400; line-height: 20px; letter-spacing: 0.25px; }
+  .type-bs { font-size: 12px; font-weight: 400; line-height: 16px; letter-spacing: 0.4px; }
+  .type-ll { font-size: 14px; font-weight: 500; line-height: 20px; letter-spacing: 0.1px; }
+  .type-lm { font-size: 12px; font-weight: 500; line-height: 16px; letter-spacing: 0.5px; }
+  .type-ls { font-size: 11px; font-weight: 500; line-height: 16px; letter-spacing: 0.5px; }
+
+  /* ─── Buttons ──────────────────────────────── */
+  .btn-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+
+  .btn-primary {
+    height: 48px; padding: 0 24px; border-radius: var(--radius-md);
+    background: var(--primary-500); color: white; border: none;
+    font-size: 14px; font-weight: 500; cursor: pointer;
+    transition: transform 0.1s, background 0.1s;
+  }
+  .btn-primary:hover { background: var(--primary-600); }
+  .btn-primary:active { transform: scale(0.97); }
+  .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .btn-secondary {
+    height: 48px; padding: 0 24px; border-radius: var(--radius-md);
+    background: transparent; color: var(--primary-600);
+    border: 1.5px solid var(--primary-500);
+    font-size: 14px; font-weight: 500; cursor: pointer;
+    transition: background 0.1s;
+  }
+  .btn-secondary:hover { background: var(--primary-50); }
+
+  .btn-text {
+    height: 40px; padding: 0 12px; border-radius: var(--radius-md);
+    background: transparent; color: var(--primary-600); border: none;
+    font-size: 14px; font-weight: 500; cursor: pointer;
+    transition: background 0.1s;
+  }
+  .btn-text:hover { background: var(--primary-100); }
+
+  /* ─── Text Field ───────────────────────────── */
+  .text-field {
+    position: relative; margin-bottom: 12px;
+  }
+  .text-field input {
+    width: 100%; height: 56px; padding: 16px;
+    border: 1.5px solid var(--outline); border-radius: var(--radius-md);
+    background: var(--surface); color: var(--on-surface);
+    font-size: 16px; outline: none; transition: border-color 0.2s;
+  }
+  .text-field input:focus { border-color: var(--primary-500); border-width: 2px; }
+  .text-field input.error { border-color: var(--error); border-width: 2px; }
+  .text-field label {
+    position: absolute; top: -8px; left: 12px;
+    background: var(--surface); padding: 0 4px;
+    font-size: 12px; color: var(--on-surface-variant);
+  }
+  .text-field .error-msg {
+    font-size: 12px; color: var(--error); margin-top: 4px; padding-left: 16px;
+  }
+
+  /* ─── Search Field ─────────────────────────── */
+  .search-field {
+    position: relative; margin-bottom: 12px;
+  }
+  .search-field input {
+    width: 100%; height: 56px; padding: 16px 16px 16px 48px;
+    border: 1.5px solid var(--outline); border-radius: var(--radius-full);
+    background: var(--surface); color: var(--on-surface);
+    font-size: 16px; outline: none; transition: border-color 0.2s;
+  }
+  .search-field input:focus { border-color: var(--primary-500); border-width: 2px; }
+  .search-field input::placeholder { color: var(--on-surface-variant); opacity: 0.6; }
+  .search-field .search-icon {
+    position: absolute; left: 16px; top: 50%; transform: translateY(-50%);
+    color: var(--on-surface-variant); font-size: 20px;
+  }
+
+  /* ─── Expiry Badge ─────────────────────────── */
+  .badge-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+
+  .badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    height: 24px; padding: 0 8px; border-radius: 6px;
+    font-size: 11px; font-weight: 500;
+  }
+  .badge-safe { background: rgba(76,175,80,0.15); color: #2E7D32; }
+  .badge-soon { background: rgba(255,152,0,0.15); color: #E65100; }
+  .badge-urgent { background: rgba(244,67,54,0.15); color: #C62828; font-weight: 700; }
+  .badge-expired { background: #F0F0F0; color: #757575; text-decoration: line-through; }
+
+  /* ─── Chips ────────────────────────────────── */
+  .chip-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+
+  .chip {
+    display: inline-flex; align-items: center; gap: 4px;
+    height: 32px; padding: 0 12px; border-radius: var(--radius-sm);
+    border: 1px solid var(--outline); background: var(--surface);
+    font-size: 14px; font-weight: 500; cursor: pointer;
+    color: var(--on-surface-variant); transition: all 0.15s;
+  }
+  .chip:hover { background: var(--surface-variant); }
+  .chip.selected {
+    background: var(--secondary-100); border-color: var(--secondary-100);
+    color: var(--secondary-900);
+  }
+  .chip .close { font-size: 18px; margin-left: 4px; cursor: pointer; }
+
+  /* ─── Cards ────────────────────────────────── */
+  .ingredient-card {
+    display: flex; align-items: center; gap: 12px;
+    width: 100%; height: 72px; padding: 12px;
+    background: var(--surface); border-radius: var(--radius-lg);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.08); cursor: pointer;
+    margin-bottom: 8px; transition: box-shadow 0.15s;
+  }
+  .ingredient-card:hover { box-shadow: 0 2px 6px rgba(0,0,0,0.12); }
+  .ingredient-card .icon { font-size: 32px; width: 48px; text-align: center; }
+  .ingredient-card .info { flex: 1; }
+  .ingredient-card .name { font-size: 14px; font-weight: 500; color: var(--on-surface); }
+  .ingredient-card .qty { font-size: 12px; color: var(--on-surface-variant); }
+  .ingredient-card .arrow { color: var(--on-surface-variant); font-size: 20px; }
+
+  .recipe-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+
+  .recipe-card {
+    background: var(--surface); border-radius: var(--radius-xl);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.08); overflow: hidden;
+    cursor: pointer; transition: box-shadow 0.15s;
+  }
+  .recipe-card:hover { box-shadow: 0 2px 6px rgba(0,0,0,0.12); }
+  .recipe-card .thumb {
+    width: 100%; aspect-ratio: 3/2;
+    background: var(--surface-variant); display: flex;
+    align-items: center; justify-content: center; font-size: 32px;
+  }
+  .recipe-card .body { padding: 12px; }
+  .recipe-card .title { font-size: 14px; font-weight: 500; margin-bottom: 4px; }
+  .recipe-card .meta { font-size: 12px; color: var(--on-surface-variant); margin-bottom: 4px; }
+  .recipe-card .match-bar {
+    display: flex; align-items: center; gap: 8px;
+  }
+  .recipe-card .match-track {
+    flex: 1; height: 6px; background: var(--primary-100);
+    border-radius: 3px; overflow: hidden;
+  }
+  .recipe-card .match-fill {
+    height: 100%; background: var(--primary-500); border-radius: 3px;
+  }
+  .recipe-card .match-pct { font-size: 11px; font-weight: 500; color: var(--primary-600); }
+
+  /* ─── FAB ──────────────────────────────────── */
+  .fab-row { display: flex; gap: 16px; align-items: center; margin-bottom: 16px; }
+
+  .fab {
+    width: 56px; height: 56px; border-radius: var(--radius-lg);
+    background: var(--primary-100); color: var(--primary-900);
+    border: none; font-size: 24px; cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+    display: flex; align-items: center; justify-content: center;
+    transition: transform 0.1s;
+  }
+  .fab:active { transform: scale(0.95); }
+
+  .fab-small {
+    width: 40px; height: 40px; border-radius: var(--radius-md);
+    background: var(--secondary-100); color: var(--secondary-900);
+    border: none; font-size: 20px; cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.10);
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  .fab-extended {
+    height: 56px; border-radius: var(--radius-lg);
+    background: var(--primary-100); color: var(--primary-900);
+    border: none; font-size: 14px; font-weight: 500; cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+    display: flex; align-items: center; gap: 12px;
+    padding: 0 20px 0 16px;
+    transition: transform 0.1s;
+  }
+  .fab-extended:active { transform: scale(0.95); }
+
+  /* ─── Dialog ───────────────────────────────── */
+  .dialog-preview {
+    width: 320px; border-radius: var(--radius-xxl);
+    background: var(--surface); padding: 24px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.14);
+  }
+  .dialog-preview .dlg-title { font-size: 24px; font-weight: 600; margin-bottom: 16px; }
+  .dialog-preview .dlg-body { font-size: 14px; color: var(--on-surface-variant); margin-bottom: 24px; }
+  .dialog-preview .dlg-actions { display: flex; justify-content: flex-end; gap: 8px; }
+
+  /* ─── Bottom Sheet ─────────────────────────── */
+  .bottom-sheet-preview {
+    width: 100%; max-width: 400px;
+    border-radius: var(--radius-xxl) var(--radius-xxl) 0 0;
+    background: var(--surface);
+    box-shadow: 0 -4px 24px rgba(0,0,0,0.16);
+    padding-bottom: 16px;
+  }
+  .bs-handle {
+    width: 32px; height: 4px; background: var(--on-surface-variant);
+    opacity: 0.4; border-radius: var(--radius-full);
+    margin: 12px auto;
+  }
+  .bs-content { padding: 0 16px; }
+
+  /* ─── Skeleton / Shimmer ───────────────────── */
+  @keyframes shimmer {
+    0% { background-position: -200px 0; }
+    100% { background-position: 400px 0; }
+  }
+  .skeleton {
+    background: linear-gradient(135deg, #E8E8E4 30%, #F4F4F0 50%, #E8E8E4 70%);
+    background-size: 600px 100%;
+    animation: shimmer 1.5s infinite linear;
+    border-radius: var(--radius-xs);
+  }
+  body.dark .skeleton {
+    background: linear-gradient(135deg, #2A2A28 30%, #343432 50%, #2A2A28 70%);
+    background-size: 600px 100%;
+  }
+
+  .skeleton-card {
+    display: flex; align-items: center; gap: 12px;
+    width: 100%; height: 72px; padding: 12px;
+    background: var(--surface); border-radius: var(--radius-lg);
+    margin-bottom: 8px;
+  }
+  .skeleton-card .sk-icon { width: 48px; height: 48px; border-radius: var(--radius-md); }
+  .skeleton-card .sk-lines { flex: 1; }
+  .skeleton-card .sk-line1 { width: 80px; height: 14px; margin-bottom: 6px; }
+  .skeleton-card .sk-line2 { width: 48px; height: 12px; }
+  .skeleton-card .sk-badge { width: 48px; height: 24px; border-radius: 6px; }
+
+  /* ─── Snackbar ─────────────────────────────── */
+  .snackbar-preview {
+    max-width: 480px; min-height: 48px;
+    background: var(--inverse-surface); color: var(--inverse-on-surface);
+    border-radius: var(--radius-md); padding: 12px 16px;
+    display: flex; align-items: center; justify-content: space-between;
+    font-size: 14px;
+  }
+  .snackbar-preview .snack-action {
+    color: var(--inverse-primary); font-weight: 500;
+    background: none; border: none; cursor: pointer; font-size: 14px;
+  }
+
+  /* ─── Error State ──────────────────────────── */
+  .inline-error {
+    display: flex; align-items: center; gap: 4px;
+    font-size: 12px; color: var(--error);
+  }
+  .network-banner {
+    width: 100%; height: 48px; background: var(--error-container);
+    display: flex; align-items: center; gap: 8px; padding: 0 16px;
+    font-size: 12px; color: var(--error);
+  }
+
+  /* ─── Empty State ──────────────────────────── */
+  .empty-state {
+    display: flex; flex-direction: column; align-items: center;
+    text-align: center; padding: 24px;
+  }
+  .empty-state .illustration { font-size: 80px; margin-bottom: 16px; }
+  .empty-state .es-title { font-size: 22px; font-weight: 600; margin-bottom: 8px; }
+  .empty-state .es-desc { font-size: 14px; color: var(--on-surface-variant); margin-bottom: 24px; }
+
+  /* ─── Bottom Nav ───────────────────────────── */
+  .bottom-nav {
+    display: flex; background: var(--surface); height: 80px;
+    box-shadow: 0 -2px 6px rgba(0,0,0,0.10); border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  }
+  .nav-item {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 4px;
+    color: var(--on-surface-variant); font-size: 12px; font-weight: 500;
+    cursor: pointer; position: relative;
+  }
+  .nav-item.active { color: var(--primary-500); }
+  .nav-item.active::before {
+    content: ''; position: absolute; top: 8px;
+    width: 64px; height: 32px; border-radius: var(--radius-full);
+    background: var(--primary-100); z-index: -1;
+  }
+  .nav-item .nav-icon { font-size: 24px; }
+
+  /* ─── Spacing & Radius tokens ──────────────── */
+  .token-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 8px; }
+  .token-item { text-align: center; }
+  .token-item .token-box {
+    width: 100%; aspect-ratio: 1; background: var(--primary-100);
+    border-radius: var(--radius-sm); display: flex;
+    align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 500; color: var(--primary-700);
+  }
+  .token-item .token-label { font-size: 11px; color: var(--on-surface-variant); margin-top: 4px; }
+
+  .radius-grid { display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; }
+  .radius-item { text-align: center; }
+  .radius-item .radius-box {
+    width: 64px; height: 64px; background: var(--primary-200);
+    border: 2px solid var(--primary-500);
+  }
+  .radius-item .radius-label { font-size: 11px; color: var(--on-surface-variant); margin-top: 4px; }
+
+  /* ─── Elevation ────────────────────────────── */
+  .elevation-grid { display: flex; gap: 16px; flex-wrap: wrap; }
+  .elevation-item { text-align: center; }
+  .elevation-item .elev-box {
+    width: 80px; height: 80px; background: var(--surface);
+    border-radius: var(--radius-lg); display: flex;
+    align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 500; color: var(--on-surface-variant);
+  }
+  .elevation-item .elev-label { font-size: 11px; color: var(--on-surface-variant); margin-top: 4px; }
+</style>
+</head>
+<body>
+
+<button class="theme-toggle" onclick="document.body.classList.toggle('dark'); this.textContent = document.body.classList.contains('dark') ? '☀️ Light' : '🌙 Dark'">🌙 Dark</button>
+
+<h1>Design System Catalog</h1>
+<p class="subtitle">냉장고 레시피 디자인 시스템 &mdash; 스펙 기반 시각 참조</p>
+
+<!-- ═══ 1. Color Palette ═══ -->
+<div class="section">
+  <h2 class="section-title">Color Palette</h2>
+
+  <p class="sub-title">Primary (Herb Green)</p>
+  <div class="color-grid">
+    <div class="color-swatch"><div class="box" style="background:#F0FAF0"></div><span class="label">50</span></div>
+    <div class="color-swatch"><div class="box" style="background:#DCEFDC"></div><span class="label">100</span></div>
+    <div class="color-swatch"><div class="box" style="background:#B8DFB8"></div><span class="label">200</span></div>
+    <div class="color-swatch"><div class="box" style="background:#8FCC8F"></div><span class="label">300</span></div>
+    <div class="color-swatch"><div class="box" style="background:#5FB85F"></div><span class="label">400</span></div>
+    <div class="color-swatch"><div class="box" style="background:#3DA63D"></div><span class="label">500</span></div>
+    <div class="color-swatch"><div class="box" style="background:#2E8C2E"></div><span class="label">600</span></div>
+    <div class="color-swatch"><div class="box" style="background:#226622"></div><span class="label">700</span></div>
+    <div class="color-swatch"><div class="box" style="background:#174717"></div><span class="label">800</span></div>
+    <div class="color-swatch"><div class="box" style="background:#0D2A0D"></div><span class="label">900</span></div>
+  </div>
+
+  <p class="sub-title">Secondary (Warm Apricot)</p>
+  <div class="color-grid">
+    <div class="color-swatch"><div class="box" style="background:#FFF8F0"></div><span class="label">50</span></div>
+    <div class="color-swatch"><div class="box" style="background:#FEECD8"></div><span class="label">100</span></div>
+    <div class="color-swatch"><div class="box" style="background:#FFD9B3"></div><span class="label">200</span></div>
+    <div class="color-swatch"><div class="box" style="background:#F9C47F"></div><span class="label">300</span></div>
+    <div class="color-swatch"><div class="box" style="background:#FFB366"></div><span class="label">400</span></div>
+    <div class="color-swatch"><div class="box" style="background:#F08C1A"></div><span class="label">500</span></div>
+    <div class="color-swatch"><div class="box" style="background:#CC7010"></div><span class="label">600</span></div>
+    <div class="color-swatch"><div class="box" style="background:#A5560A"></div><span class="label">700</span></div>
+    <div class="color-swatch"><div class="box" style="background:#CC6B00"></div><span class="label">800 ⚠️</span></div>
+    <div class="color-swatch"><div class="box" style="background:#994F00"></div><span class="label">900</span></div>
+  </div>
+
+  <p class="sub-title">Accent & Semantic</p>
+  <div class="color-grid">
+    <div class="color-swatch"><div class="box" style="background:#E8321E"></div><span class="label">Accent</span></div>
+    <div class="color-swatch"><div class="box" style="background:#388E3C"></div><span class="label">Success</span></div>
+    <div class="color-swatch"><div class="box" style="background:#EF6C00"></div><span class="label">Warning</span></div>
+    <div class="color-swatch"><div class="box" style="background:#C62828"></div><span class="label">Error</span></div>
+    <div class="color-swatch"><div class="box" style="background:#1565C0"></div><span class="label">Info</span></div>
+  </div>
+
+  <p class="sub-title">Expiry Status</p>
+  <div class="color-grid">
+    <div class="color-swatch"><div class="box" style="background:#4CAF50"></div><span class="label">Safe</span></div>
+    <div class="color-swatch"><div class="box" style="background:#FF9800"></div><span class="label">Soon</span></div>
+    <div class="color-swatch"><div class="box" style="background:#F44336"></div><span class="label">Urgent</span></div>
+    <div class="color-swatch"><div class="box" style="background:#757575"></div><span class="label">Expired</span></div>
+  </div>
+</div>
+
+<!-- ═══ 2. Typography ═══ -->
+<div class="section">
+  <h2 class="section-title">Typography</h2>
+  <p class="type-sample type-dl">Display Large (57sp)</p>
+  <p class="type-sample type-hl">Headline Large (32sp)</p>
+  <p class="type-sample type-hm">Headline Medium (28sp)</p>
+  <p class="type-sample type-hs">Headline Small (24sp)</p>
+  <p class="type-sample type-tl">Title Large (22sp)</p>
+  <p class="type-sample type-tm">Title Medium (16sp)</p>
+  <p class="type-sample type-ts">Title Small (14sp)</p>
+  <p class="type-sample type-bl">Body Large (16sp)</p>
+  <p class="type-sample type-bm">Body Medium (14sp)</p>
+  <p class="type-sample type-bs">Body Small (12sp)</p>
+  <p class="type-sample type-ll">Label Large (14sp)</p>
+  <p class="type-sample type-lm">Label Medium (12sp)</p>
+  <p class="type-sample type-ls">Label Small (11sp)</p>
+</div>
+
+<!-- ═══ 3. Spacing ═══ -->
+<div class="section">
+  <h2 class="section-title">Spacing Tokens</h2>
+  <div class="token-grid">
+    <div class="token-item"><div class="token-box" style="padding:2px">2</div><div class="token-label">xxs</div></div>
+    <div class="token-item"><div class="token-box" style="padding:4px">4</div><div class="token-label">xs</div></div>
+    <div class="token-item"><div class="token-box" style="padding:8px">8</div><div class="token-label">sm</div></div>
+    <div class="token-item"><div class="token-box" style="padding:12px">12</div><div class="token-label">md</div></div>
+    <div class="token-item"><div class="token-box" style="padding:16px">16</div><div class="token-label">base</div></div>
+    <div class="token-item"><div class="token-box" style="padding:20px">20</div><div class="token-label">lg</div></div>
+    <div class="token-item"><div class="token-box" style="padding:24px">24</div><div class="token-label">xl</div></div>
+    <div class="token-item"><div class="token-box" style="padding:32px">32</div><div class="token-label">xxl</div></div>
+  </div>
+</div>
+
+<!-- ═══ 4. Border Radius ═══ -->
+<div class="section">
+  <h2 class="section-title">Border Radius</h2>
+  <div class="radius-grid">
+    <div class="radius-item"><div class="radius-box" style="border-radius:0"></div><div class="radius-label">none (0)</div></div>
+    <div class="radius-item"><div class="radius-box" style="border-radius:4px"></div><div class="radius-label">xs (4)</div></div>
+    <div class="radius-item"><div class="radius-box" style="border-radius:8px"></div><div class="radius-label">sm (8)</div></div>
+    <div class="radius-item"><div class="radius-box" style="border-radius:12px"></div><div class="radius-label">md (12)</div></div>
+    <div class="radius-item"><div class="radius-box" style="border-radius:16px"></div><div class="radius-label">lg (16)</div></div>
+    <div class="radius-item"><div class="radius-box" style="border-radius:20px"></div><div class="radius-label">xl (20)</div></div>
+    <div class="radius-item"><div class="radius-box" style="border-radius:28px"></div><div class="radius-label">xxl (28)</div></div>
+    <div class="radius-item"><div class="radius-box" style="border-radius:9999px"></div><div class="radius-label">full</div></div>
+  </div>
+</div>
+
+<!-- ═══ 5. Elevation ═══ -->
+<div class="section">
+  <h2 class="section-title">Elevation</h2>
+  <div class="elevation-grid">
+    <div class="elevation-item"><div class="elev-box" style="box-shadow:none">Level 0</div><div class="elev-label">0dp</div></div>
+    <div class="elevation-item"><div class="elev-box" style="box-shadow:0 1px 2px rgba(0,0,0,0.08)">Level 1</div><div class="elev-label">1dp</div></div>
+    <div class="elevation-item"><div class="elev-box" style="box-shadow:0 2px 6px rgba(0,0,0,0.10)">Level 2</div><div class="elev-label">3dp</div></div>
+    <div class="elevation-item"><div class="elev-box" style="box-shadow:0 4px 12px rgba(0,0,0,0.12)">Level 3</div><div class="elev-label">6dp</div></div>
+    <div class="elevation-item"><div class="elev-box" style="box-shadow:0 6px 18px rgba(0,0,0,0.14)">Level 4</div><div class="elev-label">8dp</div></div>
+    <div class="elevation-item"><div class="elev-box" style="box-shadow:0 8px 24px rgba(0,0,0,0.16)">Level 5</div><div class="elev-label">12dp</div></div>
+  </div>
+</div>
+
+<!-- ═══ 6. Buttons ═══ -->
+<div class="section">
+  <h2 class="section-title">Buttons</h2>
+  <p class="sub-title">Primary Button</p>
+  <div class="btn-row">
+    <button class="btn-primary">냉장고에 추가</button>
+    <button class="btn-primary" disabled>비활성</button>
+  </div>
+  <p class="sub-title">Secondary Button</p>
+  <div class="btn-row">
+    <button class="btn-secondary">레시피 둘러보기</button>
+  </div>
+  <p class="sub-title">Text Button</p>
+  <div class="btn-row">
+    <button class="btn-text">더보기</button>
+  </div>
+</div>
+
+<!-- ═══ 7. Text Field ═══ -->
+<div class="section">
+  <h2 class="section-title">Text Field</h2>
+  <div class="text-field">
+    <label>재료 이름</label>
+    <input type="text" placeholder="예: 당근, 양파">
+  </div>
+  <div class="text-field">
+    <label>수량</label>
+    <input type="text" class="error" value="abc">
+    <div class="error-msg">숫자만 입력할 수 있어요</div>
+  </div>
+</div>
+
+<!-- ═══ 8. Search Field ═══ -->
+<div class="section">
+  <h2 class="section-title">Search Field</h2>
+  <div class="search-field">
+    <span class="search-icon">🔍</span>
+    <input type="text" placeholder="레시피나 재료를 검색해보세요">
+  </div>
+</div>
+
+<!-- ═══ 9. Expiry Badges ═══ -->
+<div class="section">
+  <h2 class="section-title">Expiry Badges</h2>
+  <div class="badge-row">
+    <span class="badge badge-safe">✓ D-14</span>
+    <span class="badge badge-soon">⏳ D-3</span>
+    <span class="badge badge-urgent">⚠ D-1</span>
+    <span class="badge badge-urgent">⚠ D-Day</span>
+    <span class="badge badge-expired">✕ 만료</span>
+  </div>
+</div>
+
+<!-- ═══ 10. Chips ═══ -->
+<div class="section">
+  <h2 class="section-title">Chips</h2>
+
+  <p class="sub-title">Filter Chip (다중 선택)</p>
+  <div class="chip-row">
+    <span class="chip selected" onclick="this.classList.toggle('selected')">✓ 채식</span>
+    <span class="chip" onclick="this.classList.toggle('selected')">비건</span>
+    <span class="chip" onclick="this.classList.toggle('selected')">글루텐프리</span>
+  </div>
+
+  <p class="sub-title">Suggestion Chip</p>
+  <div class="chip-row">
+    <span class="chip">오늘+3일</span>
+    <span class="chip">오늘+7일</span>
+    <span class="chip">직접입력</span>
+  </div>
+
+  <p class="sub-title">Input Chip</p>
+  <div class="chip-row">
+    <span class="chip">당근 <span class="close">&times;</span></span>
+    <span class="chip">양파 <span class="close">&times;</span></span>
+    <span class="chip">달걀 <span class="close">&times;</span></span>
+  </div>
+</div>
+
+<!-- ═══ 11. FAB ═══ -->
+<div class="section">
+  <h2 class="section-title">FAB (Floating Action Button)</h2>
+  <div class="fab-row">
+    <div style="text-align:center"><button class="fab">+</button><div class="type-ls" style="margin-top:4px">Standard</div></div>
+    <div style="text-align:center"><button class="fab-small">📷</button><div class="type-ls" style="margin-top:4px">Small</div></div>
+    <div style="text-align:center"><button class="fab-extended"><span>+</span> 재료 추가하기</button><div class="type-ls" style="margin-top:4px">Extended</div></div>
+  </div>
+</div>
+
+<!-- ═══ 12. Ingredient Cards ═══ -->
+<div class="section">
+  <h2 class="section-title">Ingredient Card</h2>
+  <div class="ingredient-card"><span class="icon">🥕</span><div class="info"><div class="name">당근</div><div class="qty">500g</div></div><span class="badge badge-soon">⏳ D-2</span><span class="arrow">›</span></div>
+  <div class="ingredient-card"><span class="icon">🥛</span><div class="info"><div class="name">우유</div><div class="qty">1L</div></div><span class="badge badge-soon">⏳ D-3</span><span class="arrow">›</span></div>
+  <div class="ingredient-card"><span class="icon">🥦</span><div class="info"><div class="name">브로콜리</div><div class="qty">1개</div></div><span class="badge badge-safe">✓ D-10</span><span class="arrow">›</span></div>
+  <div class="ingredient-card"><span class="icon">🍅</span><div class="info"><div class="name">토마토</div><div class="qty">5개</div></div><span class="badge badge-expired">✕ 만료</span><span class="arrow">›</span></div>
+</div>
+
+<!-- ═══ 13. Recipe Cards ═══ -->
+<div class="section">
+  <h2 class="section-title">Recipe Card</h2>
+  <div class="recipe-grid">
+    <div class="recipe-card">
+      <div class="thumb">🍳</div>
+      <div class="body">
+        <div class="title">김치볶음밥</div>
+        <div class="meta">20분 · ★4.8 · 2인분</div>
+        <div class="match-bar"><div class="match-track"><div class="match-fill" style="width:100%"></div></div><span class="match-pct">100%</span></div>
+      </div>
+    </div>
+    <div class="recipe-card">
+      <div class="thumb">🍲</div>
+      <div class="body">
+        <div class="title">된장찌개</div>
+        <div class="meta">30분 · ★4.9 · 3인분</div>
+        <div class="match-bar"><div class="match-track"><div class="match-fill" style="width:80%"></div></div><span class="match-pct">80%</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ 14. Skeleton / Shimmer ═══ -->
+<div class="section">
+  <h2 class="section-title">Skeleton / Shimmer</h2>
+  <p class="sub-title">Ingredient Card Skeleton</p>
+  <div class="skeleton-card">
+    <div class="skeleton sk-icon" style="width:48px;height:48px;border-radius:12px"></div>
+    <div class="sk-lines">
+      <div class="skeleton sk-line1" style="width:80px;height:14px;margin-bottom:6px"></div>
+      <div class="skeleton sk-line2" style="width:48px;height:12px"></div>
+    </div>
+    <div class="skeleton sk-badge" style="width:48px;height:24px;border-radius:6px"></div>
+  </div>
+  <div class="skeleton-card">
+    <div class="skeleton sk-icon" style="width:48px;height:48px;border-radius:12px"></div>
+    <div class="sk-lines">
+      <div class="skeleton sk-line1" style="width:80px;height:14px;margin-bottom:6px"></div>
+      <div class="skeleton sk-line2" style="width:48px;height:12px"></div>
+    </div>
+    <div class="skeleton sk-badge" style="width:48px;height:24px;border-radius:6px"></div>
+  </div>
+</div>
+
+<!-- ═══ 15. Dialog ═══ -->
+<div class="section">
+  <h2 class="section-title">Dialog</h2>
+  <div class="dialog-preview">
+    <div class="dlg-title">재료를 삭제할까요?</div>
+    <div class="dlg-body">삭제하면 복구할 수 없어요. 정말 삭제하시겠어요?</div>
+    <div class="dlg-actions">
+      <button class="btn-text">취소</button>
+      <button class="btn-text">삭제</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ 16. Bottom Sheet ═══ -->
+<div class="section">
+  <h2 class="section-title">Bottom Sheet</h2>
+  <div class="bottom-sheet-preview">
+    <div class="bs-handle"></div>
+    <div class="bs-content">
+      <p class="type-hs" style="margin-bottom:16px">정렬 기준</p>
+      <p class="type-bm" style="padding:12px 0;border-bottom:1px solid var(--outline-variant)">🔥 인기순</p>
+      <p class="type-bm" style="padding:12px 0;border-bottom:1px solid var(--outline-variant);color:var(--primary-500);font-weight:500">✓ 재료 일치순</p>
+      <p class="type-bm" style="padding:12px 0;border-bottom:1px solid var(--outline-variant)">⏱ 조리시간순</p>
+      <p class="type-bm" style="padding:12px 0">⭐ 평점순</p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ 17. Snackbar ═══ -->
+<div class="section">
+  <h2 class="section-title">Snackbar</h2>
+  <div class="snackbar-preview">
+    <span>당근이 냉장고에 추가되었어요</span>
+    <button class="snack-action">실행취소</button>
+  </div>
+</div>
+
+<!-- ═══ 18. Error State ═══ -->
+<div class="section">
+  <h2 class="section-title">Error State</h2>
+
+  <p class="sub-title">Inline Error</p>
+  <div class="inline-error" style="margin-bottom:16px">⚠ 수량을 입력해주세요</div>
+
+  <p class="sub-title">Network Error Banner</p>
+  <div class="network-banner">📶 네트워크 연결을 확인해주세요</div>
+</div>
+
+<!-- ═══ 19. Empty State ═══ -->
+<div class="section">
+  <h2 class="section-title">Empty State</h2>
+  <div class="empty-state">
+    <div class="illustration">🧊</div>
+    <div class="es-title">냉장고가 텅 비었어요</div>
+    <div class="es-desc">재료를 추가하면 맞춤 레시피를 추천해요</div>
+    <button class="btn-primary">재료 추가하기</button>
+  </div>
+</div>
+
+<!-- ═══ 20. Bottom Navigation Bar ═══ -->
+<div class="section">
+  <h2 class="section-title">Bottom Navigation Bar</h2>
+  <div class="bottom-nav">
+    <div class="nav-item active"><span class="nav-icon">🏠</span>홈</div>
+    <div class="nav-item"><span class="nav-icon">🧊</span>냉장고</div>
+    <div class="nav-item"><span class="nav-icon">📖</span>레시피</div>
+    <div class="nav-item"><span class="nav-icon">👤</span>마이페이지</div>
+  </div>
+</div>
+
+</body>
+</html>
