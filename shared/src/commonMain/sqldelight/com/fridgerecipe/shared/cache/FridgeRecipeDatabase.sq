@@ -1,0 +1,107 @@
+-- 캐시된 식재료
+CREATE TABLE cached_ingredient (
+    id INTEGER NOT NULL PRIMARY KEY,
+    ingredient_id INTEGER NOT NULL,
+    name TEXT NOT NULL,
+    category TEXT,
+    quantity REAL,
+    unit TEXT,
+    expiry_date TEXT,
+    storage_type TEXT NOT NULL DEFAULT 'fridge',
+    memo TEXT,
+    registered_via TEXT NOT NULL DEFAULT 'manual',
+    synced INTEGER NOT NULL DEFAULT 0,
+    updated_at TEXT NOT NULL
+);
+
+-- 캐시된 레시피 (기본 정보만)
+CREATE TABLE cached_recipe (
+    id INTEGER NOT NULL PRIMARY KEY,
+    title TEXT NOT NULL,
+    description TEXT,
+    thumbnail_url TEXT,
+    cooking_time INTEGER NOT NULL DEFAULT 0,
+    difficulty TEXT NOT NULL DEFAULT 'easy',
+    cuisine_type TEXT,
+    avg_rating REAL NOT NULL DEFAULT 0.0,
+    tags TEXT,
+    synced INTEGER NOT NULL DEFAULT 0,
+    updated_at TEXT NOT NULL
+);
+
+-- 동기화 큐 (오프라인 변경사항)
+CREATE TABLE sync_queue (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    entity_type TEXT NOT NULL,
+    entity_id INTEGER NOT NULL,
+    action TEXT NOT NULL,
+    payload TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    retry_count INTEGER NOT NULL DEFAULT 0
+);
+
+-- 북마크 캐시
+CREATE TABLE cached_bookmark (
+    user_id INTEGER NOT NULL,
+    recipe_id INTEGER NOT NULL,
+    created_at TEXT NOT NULL,
+    PRIMARY KEY (user_id, recipe_id)
+);
+
+-- Ingredient queries
+selectAllIngredients:
+SELECT * FROM cached_ingredient ORDER BY name;
+
+selectIngredientsByStorage:
+SELECT * FROM cached_ingredient WHERE storage_type = ? ORDER BY name;
+
+selectExpiringIngredients:
+SELECT * FROM cached_ingredient WHERE expiry_date IS NOT NULL AND expiry_date <= ? ORDER BY expiry_date;
+
+insertIngredient:
+INSERT OR REPLACE INTO cached_ingredient (id, ingredient_id, name, category, quantity, unit, expiry_date, storage_type, memo, registered_via, synced, updated_at)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+deleteIngredient:
+DELETE FROM cached_ingredient WHERE id = ?;
+
+clearIngredients:
+DELETE FROM cached_ingredient;
+
+-- Recipe queries
+selectAllRecipes:
+SELECT * FROM cached_recipe ORDER BY avg_rating DESC;
+
+selectRecipesByType:
+SELECT * FROM cached_recipe WHERE cuisine_type = ? ORDER BY avg_rating DESC;
+
+insertRecipe:
+INSERT OR REPLACE INTO cached_recipe (id, title, description, thumbnail_url, cooking_time, difficulty, cuisine_type, avg_rating, tags, synced, updated_at)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+clearRecipes:
+DELETE FROM cached_recipe;
+
+-- Sync queue queries
+selectPendingSyncs:
+SELECT * FROM sync_queue ORDER BY created_at LIMIT ?;
+
+insertSyncItem:
+INSERT INTO sync_queue (entity_type, entity_id, action, payload, created_at, retry_count)
+VALUES (?, ?, ?, ?, ?, 0);
+
+deleteSyncItem:
+DELETE FROM sync_queue WHERE id = ?;
+
+incrementRetry:
+UPDATE sync_queue SET retry_count = retry_count + 1 WHERE id = ?;
+
+-- Bookmark queries
+selectBookmarks:
+SELECT * FROM cached_bookmark WHERE user_id = ? ORDER BY created_at DESC;
+
+insertBookmark:
+INSERT OR REPLACE INTO cached_bookmark (user_id, recipe_id, created_at) VALUES (?, ?, ?);
+
+deleteBookmark:
+DELETE FROM cached_bookmark WHERE user_id = ? AND recipe_id = ?;

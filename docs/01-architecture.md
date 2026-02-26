@@ -146,7 +146,19 @@ fridge-recipe/
 
 - **로컬 DB**: SQLDelight (멀티플랫폼 SQLite)
 - **동기화**: 앱 시작 시 + 주기적 백그라운드 동기화
-- **충돌 해결**: Last-Write-Wins (타임스탬프 기반)
+- **충돌 해결**: Last-Write-Wins (타임스탬프 기반, `updated_at` 비교)
+
+**동기화 충돌 시나리오:**
+
+| 시나리오 | 해결 방법 |
+|---------|----------|
+| 오프라인에서 당근 추가 + 온라인에서 당근 추가 | 서버 `updated_at`이 더 최신이면 서버 우선, 아니면 로컬 우선. 중복 방지 인덱스에 의해 합산 처리 |
+| 오프라인에서 재료 삭제 + 온라인에서 같은 재료 수정 | 삭제가 우선 (tombstone 마커, 동기화 후 삭제 확정) |
+| 오프라인에서 수량 300g + 온라인에서 수량 500g | LWW — `updated_at`이 더 최신인 값 채택 |
+| 양쪽에서 동시에 새 재료 추가 (서로 다른 재료) | 충돌 없음 — 양쪽 모두 반영 |
+
+- **동기화 주기**: 앱 포그라운드 진입 시 즉시 + 15분 간격 백그라운드
+- **오프라인 큐**: 로컬 변경 사항을 SQLDelight `sync_queue` 테이블에 저장, 네트워크 복구 시 순차 전송
 
 ### 2.4 카메라 통합
 
@@ -199,6 +211,31 @@ fridge-recipe/
 | 404 | 리소스 없음 |
 | 429 | 요청 제한 초과 |
 | 500 | 서버 내부 오류 |
+
+#### 에러 코드 체계
+
+도메인별 에러 코드 enum을 `shared/commonMain`에 정의하여 클라이언트-서버 간 공유합니다.
+
+| 도메인 | 코드 | HTTP | 설명 |
+|--------|------|------|------|
+| AUTH | `AUTH_INVALID_TOKEN` | 401 | 유효하지 않은 토큰 |
+| AUTH | `AUTH_TOKEN_EXPIRED` | 401 | 만료된 토큰 |
+| AUTH | `AUTH_OAUTH_FAILED` | 401 | OAuth 인증 실패 |
+| AUTH | `AUTH_REFRESH_REVOKED` | 401 | 폐기된 Refresh Token |
+| INGREDIENT | `INGREDIENT_NOT_FOUND` | 404 | 식재료를 찾을 수 없음 |
+| INGREDIENT | `INGREDIENT_DUPLICATE` | 409 | 중복 식재료 (합산 필요) |
+| INGREDIENT | `INGREDIENT_MASTER_NOT_FOUND` | 404 | 마스터 DB에 없는 재료 |
+| INGREDIENT | `INGREDIENT_LIMIT_EXCEEDED` | 400 | 사용자당 최대 200개 초과 |
+| RECIPE | `RECIPE_NOT_FOUND` | 404 | 레시피를 찾을 수 없음 |
+| RECIPE | `RECIPE_ALREADY_BOOKMARKED` | 409 | 이미 북마크됨 |
+| SCAN | `SCAN_NOT_FOUND` | 404 | 스캔 결과 없음 |
+| SCAN | `SCAN_PROCESSING` | 202 | 처리 중 (폴링 필요) |
+| SCAN | `SCAN_FAILED` | 500 | 스캔 처리 실패 |
+| SCAN | `SCAN_DAILY_LIMIT` | 429 | 일일 스캔 횟수 초과 |
+| USER | `USER_NOT_FOUND` | 404 | 사용자를 찾을 수 없음 |
+| COMMON | `VALIDATION_FAILED` | 400 | 입력 검증 실패 (details에 필드별 오류) |
+| COMMON | `RATE_LIMIT_EXCEEDED` | 429 | 요청 제한 초과 |
+| COMMON | `INTERNAL_ERROR` | 500 | 서버 내부 오류 |
 
 #### 프로젝트 구조
 
@@ -295,13 +332,13 @@ dependencies {
 ├── ingredients/
 │   ├── GET    /                    # 내 냉장고 식재료 목록
 │   ├── POST   /                    # 식재료 등록 (단건)
-│   ├── POST   /batch               # 식재료 일괄 등록
+│   ├── POST   /batch               # 식재료 일괄 등록 (conflictStrategy: MERGE|SEPARATE|SKIP)
 │   ├── PUT    /{id}                # 식재료 수정
 │   ├── DELETE /{id}                # 식재료 삭제
-│   ├── DELETE /batch               # 일괄 삭제
+│   ├── POST   /delete-batch         # 일괄 삭제 (body: {"ids": [1,2,3]})
 │   ├── GET    /search?q=           # 식재료 검색 (자동완성)
 │   ├── GET    /categories          # 카테고리 목록
-│   └── GET    /expiring            # 유통기한 임박 목록
+│   └── GET    /expiring            # 소비기한 임박 목록
 │
 ├── scan/
 │   ├── POST   /receipt             # 영수증 OCR 스캔 요청
@@ -313,9 +350,9 @@ dependencies {
 │   ├── GET    /recommend           # 보유 재료 기반 추천
 │   ├── GET    /{id}                # 레시피 상세
 │   ├── GET    /search?q=           # 레시피 검색
-│   ├── POST   /{id}/bookmark       # 북마크 추가
-│   ├── DELETE /{id}/bookmark       # 북마크 제거
-│   └── GET    /bookmarks           # 북마크 목록
+│   ├── POST   /{id}/bookmark       # 즐겨찾기 추가
+│   ├── DELETE /{id}/bookmark       # 즐겨찾기 제거
+│   └── GET    /bookmarks           # 즐겨찾기 목록
 │
 ├── notifications/
 │   ├── GET    /settings            # 알림 설정 조회
@@ -396,7 +433,7 @@ Ktor → FastAPI 호출 시 `X-Internal-Api-Key` 헤더를 사용합니다.
 -- 사용자
 CREATE TABLE users (
     id              BIGSERIAL PRIMARY KEY,
-    email           VARCHAR(255) UNIQUE,
+    email           VARCHAR(255),             -- NULL 허용 (Apple Hide My Email 대응, 계정 연동은 oauth_provider+oauth_id 기준)
     nickname        VARCHAR(50) NOT NULL,
     profile_image   VARCHAR(500),
     oauth_provider  VARCHAR(20) NOT NULL,  -- kakao, google, apple
@@ -414,7 +451,7 @@ CREATE TABLE ingredient_master (
     category        VARCHAR(50) NOT NULL,   -- 채소, 육류, 해산물 등
     icon_url        VARCHAR(500),
     default_unit    VARCHAR(20),            -- 개, g, ml 등
-    default_expiry_days INT,                -- 기본 유통기한 (일)
+    default_expiry_days INT,                -- 기본 소비기한 (일)
     aliases         TEXT[] DEFAULT '{}',    -- {"계란", "달걀", "egg"}
     created_at      TIMESTAMPTZ DEFAULT NOW()
 );
@@ -422,21 +459,27 @@ CREATE INDEX idx_ingredient_master_aliases ON ingredient_master USING GIN(aliase
 CREATE INDEX idx_ingredient_master_trgm ON ingredient_master USING GIN(name gin_trgm_ops);
 
 -- 사용자 냉장고 식재료
+-- 간편 등록: 재료명만으로 등록 가능 (quantity, unit, expiry_date 모두 NULL 허용)
+-- 중복 처리: ingredient_id + storage_type + expiry_date 조합이 같으면 수량 합산
 CREATE TABLE user_ingredients (
     id              BIGSERIAL PRIMARY KEY,
     user_id         BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     ingredient_id   BIGINT NOT NULL REFERENCES ingredient_master(id),
-    quantity        DECIMAL(10,2),
-    unit            VARCHAR(20),
-    expiry_date     DATE,
+    quantity        DECIMAL(10,2),                -- NULL = 간편 등록 (유무만 관리)
+    unit            VARCHAR(20),                  -- NULL 허용
+    expiry_date     DATE,                         -- NULL = 소비기한 없음/미입력
     storage_type    VARCHAR(10) DEFAULT 'fridge',  -- fridge, freezer, room
     memo            VARCHAR(200),
     registered_via  VARCHAR(20) DEFAULT 'manual',  -- manual, receipt, photo
+    expired_notified BOOLEAN DEFAULT FALSE,      -- 만료 알림 발송 여부 (배치 삭제 "미응답" 판단용)
     created_at      TIMESTAMPTZ DEFAULT NOW(),
     updated_at      TIMESTAMPTZ DEFAULT NOW()
 );
 CREATE INDEX idx_user_ingredients_user ON user_ingredients(user_id);
 CREATE INDEX idx_user_ingredients_expiry ON user_ingredients(user_id, expiry_date);
+-- 간편 등록 중복 방지: 같은 재료+보관방식+소비기한 NULL 조합은 1건만 허용
+CREATE UNIQUE INDEX idx_user_ingredients_dedup
+    ON user_ingredients(user_id, ingredient_id, storage_type, COALESCE(expiry_date, DATE '9999-12-31'));
 
 -- 레시피
 CREATE TABLE recipes (
@@ -473,7 +516,7 @@ CREATE TABLE recipe_ingredients (
 CREATE INDEX idx_recipe_ingredients_recipe ON recipe_ingredients(recipe_id);
 CREATE INDEX idx_recipe_ingredients_ingredient ON recipe_ingredients(ingredient_id);
 
--- 북마크
+-- 즐겨찾기 (API 경로: /bookmark, UI 표기: "즐겨찾기", 아이콘: ♡)
 CREATE TABLE bookmarks (
     user_id         BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     recipe_id       BIGINT NOT NULL REFERENCES recipes(id) ON DELETE CASCADE,
@@ -497,7 +540,9 @@ CREATE TABLE scan_history (
 CREATE TABLE notification_settings (
     user_id           BIGINT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
     expiry_enabled    BOOLEAN DEFAULT TRUE,
-    expiry_days       INT[] DEFAULT '{3, 1}',     -- D-3, D-1에 알림
+    -- 알림 발송 시점은 사용자가 커스텀 가능하며, UI 배지 색상(안전/임박/긴급)과는 독립적으로 동작함
+    expiry_days       INT[] DEFAULT '{3, 1, 0}',  -- D-3, D-1, 당일 알림
+    -- theme_preference는 알림과 무관한 UI 설정이나, MVP에서는 별도 테이블 없이 여기서 관리
     theme_preference  VARCHAR(10) DEFAULT 'system', -- light, dark, system
     updated_at        TIMESTAMPTZ DEFAULT NOW()
 );
@@ -526,6 +571,8 @@ CREATE TABLE user_cooking_history (
 CREATE INDEX idx_cooking_history_user ON user_cooking_history(user_id);
 
 -- 디바이스 토큰 (푸시 알림용, notification_settings에서 분리)
+-- 토큰 갱신 전략: 같은 기기에서 토큰 변경 시 기존 row를 is_active=false로 비활성화 후 새 row INSERT
+-- 앱 실행 시 POST /notifications/device-token → UPSERT (device_type 기준 기존 토큰 비활성화)
 CREATE TABLE device_tokens (
     id              BIGSERIAL PRIMARY KEY,
     user_id         BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -537,6 +584,21 @@ CREATE TABLE device_tokens (
     UNIQUE(token)
 );
 CREATE INDEX idx_device_tokens_user ON device_tokens(user_id);
+
+-- Refresh Token (JWT 토큰 갱신용)
+-- Refresh Token Rotation: 사용 시마다 새 토큰 발급, 이전 토큰 무효화
+-- 사용자당 최대 5개 (다중 기기), FIFO로 오래된 것부터 폐기
+CREATE TABLE refresh_tokens (
+    id              BIGSERIAL PRIMARY KEY,
+    user_id         BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    token_hash      VARCHAR(64) NOT NULL UNIQUE,   -- SHA-256 해시 저장 (원문 저장 금지)
+    device_info     VARCHAR(200),                   -- User-Agent 기반 기기 식별
+    expires_at      TIMESTAMPTZ NOT NULL,           -- 발급 후 14일
+    created_at      TIMESTAMPTZ DEFAULT NOW(),
+    revoked_at      TIMESTAMPTZ                     -- NULL이면 유효, 값 있으면 폐기됨
+);
+CREATE INDEX idx_refresh_tokens_user ON refresh_tokens(user_id);
+CREATE INDEX idx_refresh_tokens_expires ON refresh_tokens(expires_at) WHERE revoked_at IS NULL;
 
 -- 추가 인덱스
 CREATE INDEX idx_recipes_title_trgm ON recipes USING GIN(title gin_trgm_ops);
@@ -558,7 +620,9 @@ CREATE INDEX idx_scan_history_user ON scan_history(user_id);
 | 마트 포맷 최적화 | GS25, CU, 이마트 등 한국 유통 영수증 |
 | 비용 | 월 무료 한도 제공, MVP 비용 절감 |
 
-**처리 흐름**: 이미지 업로드 → S3 저장 → Celery 태스크 → Clova OCR API → 상품명 파싱 → 식재료 매칭 → 결과 반환
+**처리 흐름**: 이미지 업로드 → S3 저장 → S3 Pre-signed URL 발급 → Celery 태스크에 URL 전달 → Clova OCR API → 상품명 파싱 → 식재료 매칭 → 결과 반환
+
+> **메모리 최적화**: 이미지를 base64로 인메모리 변환하면 10MB 이미지가 ~13.3MB가 되어 동시 요청 시 메모리 부족 위험이 있습니다. S3 Pre-signed URL을 AI 서비스에 전달하여 직접 다운로드하게 하면 Ktor 서버의 메모리 부담이 없어집니다. Celery Worker의 `--concurrency=2`로 제한하여 AI 서비스(1 vCPU, 2GB)의 메모리를 안전하게 운영합니다.
 
 ### 4.2 식재료 사진 인식
 
@@ -577,7 +641,7 @@ CREATE INDEX idx_scan_history_user ON scan_history(user_id);
 
 ```
 총점 = 0.40 × 재료매칭률
-     + 0.25 × 유통기한임박활용도
+     + 0.25 × 소비기한임박활용도
      + 0.15 × 사용자선호도
      + 0.10 × 인기도
      - 0.10 × 부족재료패널티
@@ -585,7 +649,32 @@ CREATE INDEX idx_scan_history_user ON scan_history(user_id);
 
 - **Cold-start 문제 없음**: 사용자 데이터 없이도 즉시 추천 가능
 - **설명 가능**: "보유 재료 7/9개 매칭 (78%)" 으로 추천 이유 설명
-- **유통기한 활용**: 임박 재료를 사용하는 레시피에 가산점
+- **소비기한 활용**: 임박 재료를 사용하는 레시피에 가산점
+- **간편 등록 호환**: 수량/단위 없이 재료 유무(presence)만으로 매칭 동작
+
+**매칭 표시 기준:**
+- 필수 재료(`is_essential=true`) 1개 이상 보유 AND 매칭률 30% 이상만 표시
+- 대체 재료(`substitute_ids`) 보유 시 해당 재료 보유로 간주
+- 만료된 재료(`expiry_date < today`)는 매칭 계산에서 제외
+
+| 구간 | 매칭률 | 라벨 |
+|------|--------|------|
+| A | 80%+ | "바로 요리 가능" |
+| B | 50~79% | "재료 조금 부족" |
+| C | 30~49% | "도전해보세요" |
+| - | 30% 미만 | 표시 안 함 |
+
+**스코어 항목별 계산 방법:**
+
+| 항목 (가중치) | 계산 방법 |
+|-------------|----------|
+| 재료매칭률 (0.40) | `보유 필수재료 수 / 전체 필수재료 수` (대체 재료 보유 시 해당 재료 보유로 간주) |
+| 소비기한임박활용도 (0.25) | `Σ(보유 재료별 상태 점수) / 레시피 필수재료 수`. 상태 점수: 긴급(D-1~당일)=1.0, 임박(D-2~D-3)=0.7, 안전(D-4+)=0.0, 미보유=0.0. 보유 재료 중 임박/긴급이 0건이면 이 항목 전체 0.0 |
+| 사용자선호도 (0.15) | `f(조리이력 cuisine_type 빈도, dietary_prefs 일치도)`. 이력 0건(Cold Start)일 때 기본값 0.5 |
+| 인기도 (0.10) | `(view_count 정규화 + avg_rating / 5.0) / 2` |
+| 부족재료패널티 (0.10) | `부족 필수재료 수 / 전체 필수재료 수` |
+
+> **사용자선호도 상세**: `조리이력점수(0.6) + 식이선호도점수(0.4)`. 조리이력점수 = 최근 30일 조리한 레시피의 `cuisine_type` 빈도를 정규화한 값. 식이선호도점수 = 레시피가 사용자의 `dietary_prefs`(알레르기, 채식 등)를 위반하면 0.0, 완전 부합하면 1.0.
 
 ---
 
@@ -635,6 +724,8 @@ CREATE INDEX idx_scan_history_user ON scan_history(user_id);
 | ALB | Application Load Balancer | ~$20 |
 | NAT Gateway | 1 AZ, 10GB 처리 | ~$40 |
 | **합계** | | **~$172/월** |
+
+> **NAT Gateway 비용 최적화**: NAT Gateway가 전체 비용의 23%를 차지합니다. VPC Endpoint(S3, ECR용)를 추가하여 AWS 서비스 통신은 NAT를 우회하고, 외부 API(Clova, OpenAI) 호출만 NAT를 통과하도록 설정하면 데이터 처리량을 줄여 비용을 절감할 수 있습니다. MVP 초기에는 Public Subnet + Security Group 조합으로 NAT를 생략하는 것도 가능합니다.
 
 ### 5.3 보안
 
@@ -714,6 +805,39 @@ PR:
 
 > MVP 단계에서는 Single-AZ로 시작하고, DAU 1,000 돌파 시 Multi-AZ + Read Replica 전환 계획
 
+### 5.7 배치/스케줄링
+
+Ktor 서버 내 `kotlinx-coroutines` 기반 스케줄러로 주기적 배치 작업을 실행합니다.
+
+| 작업 | 주기 | 실행 환경 | 설명 |
+|------|------|----------|------|
+| 만료 재료 자동 삭제 | 매일 03:00 KST | Ktor (코루틴) | `expiry_date + 7일 < today` AND 사용자 미응답 재료 삭제 + 인앱 알림 생성 |
+| 소비기한 푸시 알림 발송 | 매일 09:00 KST | Ktor (코루틴) | `notification_settings.expiry_days` 기준으로 대상 사용자 추출 → FCM/APNs 발송 |
+| 만료 Refresh Token 정리 | 매일 04:00 KST | Ktor (코루틴) | `expires_at < now()` OR `revoked_at IS NOT NULL` 토큰 삭제 |
+| Redis 캐시 워밍 | 앱 배포 시 | CI/CD 후처리 | 인기 레시피 추천 결과 사전 캐시 |
+
+```kotlin
+// 배치 스케줄러 예시 (Ktor Application 모듈 내)
+fun Application.configureScheduler() {
+    launch {
+        while (isActive) {
+            delay(calculateNextRunDelay("03:00"))
+            expiredIngredientCleanupService.execute()
+        }
+    }
+}
+```
+
+> MVP에서는 Ktor 내장 코루틴 스케줄러로 충분합니다. DAU 5,000+ 시점에서 별도 배치 서비스 또는 AWS EventBridge + Lambda 조합으로 분리 검토.
+
+### 5.8 OCR 폴링 전략
+
+Celery 비동기 태스크의 결과를 클라이언트가 폴링하는 방식:
+
+- **폴링 간격**: 1초 (첫 5회) → 2초 (이후)
+- **최대 대기**: 30초 (타임아웃 시 실패 처리)
+- **Post-MVP 개선**: WebSocket/SSE 기반 실시간 결과 전달 (Ktor WebSocket 지원)
+
 ---
 
 ## 6. KMP ↔ Ktor 코드 공유
@@ -770,7 +894,7 @@ enum class StorageType { FRIDGE, FREEZER, ROOM }
 | **6-8** | 3주 | 영수증 OCR(카메라 + Clova OCR) + 냉장고 대시보드 UI |
 | **9-11** | 3주 | 레시피 데이터 수집(공공 API + 수동 입력, 1,000개) + 추천 엔진 + 추천/상세 UI |
 | **12-13** | 2주 | 레시피 데이터 정제·검수 + source_type 태깅 + 추천 품질 개선 |
-| **14-16** | 3주 | 유통기한 알림(FCM/APNs) + 프로필/설정 + 오프라인 캐시(SQLDelight) |
+| **14-16** | 3주 | 소비기한 알림(FCM/APNs) + 프로필/설정 + 오프라인 캐시(SQLDelight) |
 | **17-18** | 2주 | 통합 테스트, 성능 최적화, 버그 수정 |
 | **19-20** | 2주 | 앱스토어 심사 제출, 프로덕션 배포, 모니터링 안정화 |
 

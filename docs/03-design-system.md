@@ -14,7 +14,7 @@
 |------|------|
 | **Fresh First** | 신선한 초록색 톤으로 식재료의 생동감을 전달 |
 | **Effortless Discovery** | 최소 터치로 레시피 발견, 인지 부하 최소화 |
-| **Warm Precision** | 따뜻하면서도 정확한 정보 전달 (유통기한, 영양 정보) |
+| **Warm Precision** | 따뜻하면서도 정확한 정보 전달 (소비기한, 영양 정보) |
 | **Honest Feedback** | OCR/인식 결과에 대한 투명한 신뢰도 표시 |
 | **Inclusive by Default** | WCAG 2.1 AA 접근성 기본 준수 |
 
@@ -76,7 +76,7 @@
 | Error | #C62828 | #FFCDD2 | #EF5350 | #B71C1C |
 | Info | #1565C0 | #BBDEFB | #42A5F5 | #0D47A1 |
 
-### 2.5 유통기한 전용 컬러
+### 2.5 소비기한 전용 컬러
 
 | 상태 | Light HEX | Dark HEX | 조건 |
 |------|-----------|----------|------|
@@ -217,7 +217,7 @@ Elevation: Level 1
 패딩: 12dp
 
 구조:
-[아이콘 48dp] [재료명 + 수량] [유통기한 배지] [>]
+[아이콘 48dp] [재료명 + 수량] [소비기한 배지] [>]
 ```
 
 #### 레시피 카드 (세로형)
@@ -231,8 +231,8 @@ Elevation: Level 1
 
 구조:
 ┌──────────────┐
-│  이미지       │  3:2 비율
-│  (썸네일)     │
+│  이미지    [♡]│  3:2 비율, 우상단 북마크 토글
+│  (썸네일)     │  ♡ 터치 영역: 48x48dp
 ├──────────────┤
 │  레시피명     │  titleSmall, maxLines 2
 │  ⏱20분 ★4.8  │  bodySmall
@@ -240,7 +240,7 @@ Elevation: Level 1
 └──────────────┘
 ```
 
-### 5.4 유통기한 배지
+### 5.4 소비기한 배지
 
 ```
 높이: 24dp
@@ -733,8 +733,8 @@ private val DarkColorScheme = darkColorScheme(
     surfaceVariant     = Color(0xFF2A2A28),
     onSurfaceVariant   = Color(0xFFA0A09A),
     outline            = Color(0xFF5A5A54),
-    // Accent(Tomato Red) 다크 변형: AccentDark #FF6B5C — 가독성 확보
-    error              = Color(0xFFFF6B5C),
+    // 시맨틱 에러 컬러 (errorDark #EF5350), Accent는 별도 커스텀 토큰으로 관리
+    error              = Color(0xFFEF5350),
     onError            = Color(0xFF680003),
     inverseSurface     = Color(0xFFE8E8E4),
     inverseOnSurface   = Color(0xFF2E2E2A),
@@ -897,7 +897,7 @@ fun FridgeRecipeTheme(
 │  🔍 레시피나 재료를 검색해보세요    │  검색 필드
 │                                    │
 │  ⚠️ 소비기한 임박 재료              │  섹션 헤더
-│  [당근 D-2] [우유 D-3] [계란 D-5] │  수평 스크롤 칩
+│  [당근 D-1] [우유 D-2] [계란 D-3] │  수평 스크롤 칩
 │                                    │
 │  오늘 추천 레시피            더보기 │
 │  ┌──────────┐ ┌──────────┐        │
@@ -953,8 +953,8 @@ fun FridgeRecipeTheme(
 │  └──────────────────────────────┘  │
 │  최근: [당근] [양파] [달걀] ...    │  빠른 선택 칩
 │                                    │
-│  카테고리 *              채소  ▾   │
-│  수량: [___]                       │
+│  카테고리            채소 (자동)   │  마스터 DB에서 자동 매핑, 읽기 전용
+│  수량 (선택): [___]                │
 │  [개] [g] [kg] [ml] [L] [봉지]    │  단위 선택 칩
 │                                    │
 │  소비기한 (선택): [___]            │
@@ -1075,7 +1075,7 @@ fun FridgeRecipeTheme(
 │  🌙 다크 모드                    ○ │
 │  🏠 식이 제한 설정               > │
 │  📊 내 소비 통계                 > │
-│  ❤️ 즐겨찾기 레시피             > │
+│  ♡ 즐겨찾기                    > │
 │  ❓ 도움말                       > │
 │  ℹ️ 버전 정보            v1.0.0  │
 │  [로그아웃]                        │
@@ -1121,7 +1121,7 @@ Modifier.semantics(mergeDescendants = true) {}
 **콘텐츠 설명 패턴**:
 - 재료 카드: "{재료명}, {수량}{단위}, 소비기한 {N}일 남음"
 - 레시피 카드: "{레시피명}, {조리시간}분, {인원}인분, 별점 {N}점"
-- 유통기한 배지: "소비기한 {N}일 남음" / "소비기한 만료"
+- 소비기한 배지: "소비기한 {N}일 남음" / "소비기한 만료"
 
 ### 13.4 모션 감소 모드
 

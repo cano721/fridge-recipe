@@ -1,0 +1,93 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: fridge-recipe-postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-fridge_recipe}
+      POSTGRES_USER: ${POSTGRES_USER:-fridge}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-fridge1234}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-fridge} -d ${POSTGRES_DB:-fridge_recipe}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: fridge-recipe-redis
+    command: redis-server --requirepass ${REDIS_PASSWORD:-redis1234}
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-redis1234}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  main-api:
+    build:
+      context: ./backend/main-api
+      dockerfile: Dockerfile
+    container_name: fridge-recipe-api
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ${POSTGRES_DB:-fridge_recipe}
+      DB_USER: ${POSTGRES_USER:-fridge}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-fridge1234}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-redis1234}
+      AI_SERVICE_URL: http://ai-service:8000
+      AI_SERVICE_API_KEY: ${INTERNAL_API_KEY:-dev-internal-key}
+      JWT_SECRET: ${JWT_SECRET:-dev-jwt-secret-change-in-production}
+      JWT_ISSUER: ${JWT_ISSUER:-fridge-recipe}
+      JWT_AUDIENCE: ${JWT_AUDIENCE:-fridge-recipe-app}
+    ports:
+      - "${API_PORT:-8080}:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  ai-service:
+    build:
+      context: ./backend/ai-service
+      dockerfile: Dockerfile
+    container_name: fridge-recipe-ai
+    environment:
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY:-dev-internal-key}
+      REDIS_URL: redis://:${REDIS_PASSWORD:-redis1234}@redis:6379/0
+      CELERY_BROKER_URL: redis://:${REDIS_PASSWORD:-redis1234}@redis:6379/1
+      CELERY_RESULT_BACKEND: redis://:${REDIS_PASSWORD:-redis1234}@redis:6379/1
+    ports:
+      - "${AI_SERVICE_PORT:-8000}:8000"
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  celery-worker:
+    build:
+      context: ./backend/ai-service
+      dockerfile: Dockerfile
+    container_name: fridge-recipe-celery
+    command: celery -A app.core.celery_app worker --loglevel=info --concurrency=2
+    environment:
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY:-dev-internal-key}
+      REDIS_URL: redis://:${REDIS_PASSWORD:-redis1234}@redis:6379/0
+      CELERY_BROKER_URL: redis://:${REDIS_PASSWORD:-redis1234}@redis:6379/1
+      CELERY_RESULT_BACKEND: redis://:${REDIS_PASSWORD:-redis1234}@redis:6379/1
+    depends_on:
+      redis:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+  redis_data:

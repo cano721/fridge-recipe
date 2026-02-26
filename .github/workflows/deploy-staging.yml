@@ -1,0 +1,14 @@
+name: Deploy Staging
+
+on:
+  push:
+    branches: [develop]
+
+jobs:
+  build-and-push:
+    name: Build & Push (Stub)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Placeholder
+        run: echo "TODO - ECR push + ECS deploy (인프라 구축 후 활성화)"
