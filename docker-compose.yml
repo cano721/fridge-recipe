@@ -52,6 +52,7 @@ services:
       SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY:-}
       JWT_SECRET: ${JWT_SECRET:-dev-jwt-secret-change-in-production}
       AI_SERVICE_URL: http://ai-service:8000
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY:-dev-internal-key}
     ports:
       - "${WEB_PORT:-3000}:3000"
     depends_on:
