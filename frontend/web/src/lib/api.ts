@@ -120,6 +120,11 @@ class ApiClient {
     return this.request<any>('/recipes/bookmarks');
   }
 
+  // Notifications
+  getNotifications() {
+    return this.request<any>('/notifications');
+  }
+
   // Scan
   submitScan(type: 'receipt' | 'photo', imageBase64: string) {
     return this.request<any>('/scan', {

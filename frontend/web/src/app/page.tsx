@@ -8,6 +8,7 @@ import { Ingredient, RecipeRecommendation } from '@/types';
 import { getCategoryEmoji, getStorageLabel, formatCookingTime } from '@/lib/utils';
 import ExpiryBadge from '@/components/ui/ExpiryBadge';
 import { SkeletonListItem, SkeletonCard } from '@/components/ui/LoadingSpinner';
+import { Bell } from 'lucide-react';
 
 const quickActions = [
   { label: '식재료 추가', emoji: '🥦', href: '/fridge' },
@@ -22,6 +23,7 @@ export default function HomePage() {
   const [recommendations, setRecommendations] = useState<RecipeRecommendation[]>([]);
   const [loadingExpiring, setLoadingExpiring] = useState(true);
   const [loadingRecipes, setLoadingRecipes] = useState(true);
+  const [notifCount, setNotifCount] = useState(0);
 
   useEffect(() => {
     if (authLoading) return;
@@ -53,15 +55,40 @@ export default function HomePage() {
       }
     };
 
+    const fetchNotifCount = async () => {
+      try {
+        const res = await api.getNotifications();
+        if (res?.data) setNotifCount(res.data.length);
+      } catch {
+        // silent
+      }
+    };
+
     fetchExpiring();
     fetchRecipes();
+    fetchNotifCount();
   }, [isLoggedIn, authLoading]);
 
   return (
     <div className="min-h-screen bg-surface-variant">
       {/* Header */}
       <header className="bg-gradient-to-r from-primary-700 to-primary text-white px-6 pt-12 pb-8 rounded-b-[28px]">
-        <h1 className="text-2xl font-semibold">냉장고 레시피</h1>
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-semibold">냉장고 레시피</h1>
+          {isLoggedIn && (
+            <button
+              onClick={() => router.push('/notifications')}
+              className="relative p-2 rounded-full hover:bg-white/20 transition-colors"
+            >
+              <Bell size={22} />
+              {notifCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] bg-danger text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1">
+                  {notifCount > 9 ? '9+' : notifCount}
+                </span>
+              )}
+            </button>
+          )}
+        </div>
         <p className="text-white/80 text-sm mt-1">
           {isLoggedIn ? `${user?.nickname || '요리사'}님, 오늘 뭐 먹을까요?` : '오늘 뭐 먹을까요?'}
         </p>
