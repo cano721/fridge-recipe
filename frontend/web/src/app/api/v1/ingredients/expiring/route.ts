@@ -3,6 +3,11 @@ import { isSupabaseConfigured, getServiceSupabase } from '@/lib/supabase';
 import { requireUserId, successResponse, errorResponse, AuthError } from '@/lib/auth';
 import { mockUserIngredients } from '@/lib/mock-data';
 
+function computeDaysUntilExpiry(expiryDate: string | null): number | null {
+  if (!expiryDate) return null;
+  return Math.ceil((new Date(expiryDate).getTime() - Date.now()) / 86400000);
+}
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -40,12 +45,19 @@ export async function GET(request: NextRequest) {
 
     const items = (data || []).map((item: Record<string, unknown>) => {
       const master = item.ingredient_master as unknown as Record<string, unknown>;
+      const expiryDate = item.expiry_date as string | null;
       return {
-        id: item.id, ingredientId: master.id, ingredientName: master.name,
-        category: master.category, iconUrl: master.icon_url,
-        quantity: item.quantity, unit: item.unit || master.default_unit,
-        expiryDate: item.expiry_date, storageType: item.storage_type,
-        memo: item.memo, registeredVia: item.registered_via, createdAt: item.created_at,
+        id: item.id,
+        ingredientId: master.id,
+        name: master.name,
+        category: master.category,
+        quantity: item.quantity,
+        unit: item.unit || master.default_unit,
+        expiryDate,
+        storageType: item.storage_type,
+        memo: item.memo,
+        registeredVia: item.registered_via,
+        daysUntilExpiry: computeDaysUntilExpiry(expiryDate),
       };
     });
 

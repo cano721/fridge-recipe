@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 
@@ -10,9 +11,23 @@ export default function LoginPage() {
     alert(`${provider} 로그인은 준비 중입니다`);
   };
 
-  const handleGuestLogin = () => {
-    api.setToken('demo-guest-token');
-    router.push('/');
+  const [loading, setLoading] = useState(false);
+
+  const handleGuestLogin = async () => {
+    setLoading(true);
+    try {
+      const res = await api.login('demo', 'demo-access-token');
+      if (res.success && res.data?.accessToken) {
+        api.setToken(res.data.accessToken);
+        router.push('/');
+      }
+    } catch {
+      // fallback: set demo token for offline use
+      api.setToken('demo-guest-token');
+      router.push('/');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -68,10 +83,11 @@ export default function LoginPage() {
       {/* Guest Login */}
       <button
         onClick={handleGuestLogin}
-        className="mt-6 h-10 px-3 text-sm text-primary-600 font-medium active:bg-primary-100 rounded-xl transition-colors"
+        disabled={loading}
+        className="mt-6 h-10 px-3 text-sm text-primary-600 font-medium active:bg-primary-100 rounded-xl transition-colors disabled:opacity-50"
         style={{ transitionDuration: 'var(--duration-fast)' }}
       >
-        게스트로 둘러보기
+        {loading ? '로그인 중...' : '게스트로 둘러보기'}
       </button>
 
       {/* Bottom Links */}

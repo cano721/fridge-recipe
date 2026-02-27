@@ -76,7 +76,15 @@ class ApiClient {
   }
 
   searchIngredientMaster(query: string) {
-    return this.request<any>(`/ingredients/master/search?q=${encodeURIComponent(query)}`);
+    return this.request<any>(`/ingredients/search?q=${encodeURIComponent(query)}`);
+  }
+
+  // Auth
+  login(provider: string, accessToken: string) {
+    return this.request<any>('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ provider, accessToken }),
+    });
   }
 
   // Recipes
@@ -95,8 +103,12 @@ class ApiClient {
     return this.request<any>(path);
   }
 
-  toggleBookmark(recipeId: number) {
+  addBookmark(recipeId: number) {
     return this.request<any>(`/recipes/${recipeId}/bookmark`, { method: 'POST' });
+  }
+
+  removeBookmark(recipeId: number) {
+    return this.request<any>(`/recipes/${recipeId}/bookmark`, { method: 'DELETE' });
   }
 
   getBookmarks() {

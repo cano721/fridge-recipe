@@ -31,6 +31,7 @@ export default function RecipeDetailPage({ params }: PageProps) {
       const res = await api.getRecipeDetail(Number(id));
       if (res.success && res.data) {
         setRecipe(res.data);
+        setBookmarked(res.data.isBookmarked || false);
       }
     } finally {
       setLoading(false);
@@ -41,7 +42,11 @@ export default function RecipeDetailPage({ params }: PageProps) {
     if (bookmarkLoading) return;
     setBookmarkLoading(true);
     try {
-      await api.toggleBookmark(Number(id));
+      if (bookmarked) {
+        await api.removeBookmark(Number(id));
+      } else {
+        await api.addBookmark(Number(id));
+      }
       setBookmarked((prev) => !prev);
     } finally {
       setBookmarkLoading(false);
