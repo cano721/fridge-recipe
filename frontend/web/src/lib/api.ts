@@ -120,6 +120,18 @@ class ApiClient {
     return this.request<any>('/recipes/bookmarks');
   }
 
+  // Preferences
+  getPreferences() {
+    return this.request<any>('/users/me/preferences');
+  }
+
+  updatePreferences(prefs: Record<string, unknown>) {
+    return this.request<any>('/users/me/preferences', {
+      method: 'PUT',
+      body: JSON.stringify(prefs),
+    });
+  }
+
   // Notifications
   getNotifications() {
     return this.request<any>('/notifications');
