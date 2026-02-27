@@ -1,23 +1,24 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import BottomNav from "@/components/layout/BottomNav";
 import { AuthProvider } from "@/lib/auth-context";
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  themeColor: "#2E7D32",
+};
 
 export const metadata: Metadata = {
   title: "냉장고 레시피",
   description: "냉장고 속 재료로 만드는 맞춤 레시피",
   manifest: "/manifest.json",
-  themeColor: "#2E7D32",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
     title: "냉장고 레시피",
-  },
-  viewport: {
-    width: "device-width",
-    initialScale: 1,
-    maximumScale: 1,
-    userScalable: false,
   },
 };
 
