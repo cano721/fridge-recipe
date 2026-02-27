@@ -89,7 +89,13 @@ export async function GET(
       cuisineType: recipe.cuisine_type, difficulty: recipe.difficulty,
       cookingTime: recipe.cooking_time, servings: recipe.servings,
       thumbnailUrl: recipe.thumbnail_url,
-      steps: recipe.steps, nutrition,
+      steps: Array.isArray(recipe.steps) ? (recipe.steps as Array<Record<string, unknown>>).map((s) => ({
+        order: s.order ?? s.step,
+        description: s.description,
+        imageUrl: s.imageUrl || s.image_url || undefined,
+        timerSeconds: s.timerSeconds || s.timer_seconds || undefined,
+      })) : [],
+      nutrition,
       tags: recipe.tags, avgRating: recipe.avg_rating, viewCount: recipe.view_count,
       ingredients, isBookmarked,
     });
