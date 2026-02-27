@@ -1,9 +1,11 @@
 import { NextRequest } from 'next/server';
 import { requireUserId, successResponse, errorResponse, AuthError } from '@/lib/auth';
 
-const AI_SERVICE_URL = process.env.AI_SERVICE_URL;
-const INTERNAL_API_KEY = process.env.INTERNAL_API_KEY || 'dev-internal-key';
-
+/**
+ * 하위호환용 폴링 엔드포인트
+ * 새 scan API는 즉시 결과를 반환하므로 이 엔드포인트는 더 이상 필요하지 않지만,
+ * 기존 클라이언트 호환을 위해 유지합니다.
+ */
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ taskId: string }> },
@@ -12,47 +14,11 @@ export async function GET(
     requireUserId(request);
     const { taskId } = await params;
 
-    // Mock task - return cached result
-    if (taskId.startsWith('mock-')) {
-      const cache = (globalThis as Record<string, unknown>).__scanCache as Map<string, unknown> | undefined;
-      const cached = cache?.get(taskId) as Record<string, unknown> | undefined;
-
-      if (cached) {
-        return successResponse({
-          taskId,
-          status: 'done',
-          items: cached.items,
-        });
-      }
-      return successResponse({ taskId, status: 'done', items: [] });
-    }
-
-    // Real AI service polling
-    if (!AI_SERVICE_URL) {
-      return errorResponse('SERVICE_UNAVAILABLE', 'AI service not configured', 503);
-    }
-
-    // Determine endpoint based on task type (receipt or photo)
-    const isReceipt = taskId.includes('receipt') || !taskId.includes('vision');
-    const endpoint = isReceipt
-      ? `/ai/ocr/receipt/${taskId}`
-      : `/ai/vision/ingredients/${taskId}`;
-
-    const res = await fetch(`${AI_SERVICE_URL}${endpoint}`, {
-      headers: { 'X-Internal-Api-Key': INTERNAL_API_KEY },
-      signal: AbortSignal.timeout(5000),
-    });
-
-    if (!res.ok) {
-      return errorResponse('AI_SERVICE_ERROR', `AI service returned ${res.status}`, 502);
-    }
-
-    const data = await res.json();
     return successResponse({
       taskId,
-      status: data.status,
-      items: data.items ?? data.ingredients ?? [],
-      error: data.error,
+      status: 'done',
+      items: [],
+      message: 'Scan API now returns results immediately. Use POST /api/v1/scan instead.',
     });
   } catch (e) {
     if (e instanceof AuthError) return errorResponse('UNAUTHORIZED', e.message, 401);

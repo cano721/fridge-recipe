@@ -2,115 +2,13 @@ import { NextRequest } from 'next/server';
 import { isSupabaseConfigured, getServiceSupabase } from '@/lib/supabase';
 import { requireUserId, successResponse, errorResponse, AuthError } from '@/lib/auth';
 import { mockRecipes, mockUserIngredients } from '@/lib/mock-data';
-
-const AI_SERVICE_URL = process.env.AI_SERVICE_URL;
-const INTERNAL_API_KEY = process.env.INTERNAL_API_KEY || 'dev-internal-key';
+import { recommend, type RecipeInput, type UserIngredientInput } from '@/lib/recommendation-engine';
 
 function getMatchLabel(ratio: number): string {
-  if (ratio >= 1) return 'perfect';
-  if (ratio >= 0.7) return 'great';
-  if (ratio >= 0.4) return 'good';
-  return 'partial';
-}
-
-interface AIRecommendation {
-  recipe_id: number;
-  total_score: number;
-  match_ratio: number;
-  matched_count: number;
-  total_required: number;
-  missing_ingredients: number[];
-  match_label: string;
-}
-
-async function callAIService(
-  recipes: Record<string, unknown>[],
-  userIngredients: Record<string, unknown>[],
-  limit: number,
-): Promise<AIRecommendation[] | null> {
-  if (!AI_SERVICE_URL) return null;
-
-  const body = {
-    recipes: recipes.map((r) => {
-      const ingredients = r.recipe_ingredients as Array<Record<string, unknown>>;
-      return {
-        id: r.id,
-        title: r.title,
-        ingredients: ingredients.map((ri) => {
-          const master = ri.ingredient_master as Record<string, unknown>;
-          return {
-            id: master?.id ?? ri.ingredient_id,
-            name: master?.name ?? 'unknown',
-            is_essential: ri.is_essential ?? true,
-            substitute_ids: [],
-          };
-        }),
-        view_count: r.view_count ?? 0,
-        avg_rating: r.avg_rating ?? 0,
-      };
-    }),
-    user_ingredients: userIngredients.map((ui) => ({
-      ingredient_id: ui.ingredient_id,
-      expiry_date: ui.expiry_date ?? null,
-      storage_type: ui.storage_type ?? 'fridge',
-    })),
-    limit,
-  };
-
-  try {
-    const res = await fetch(`${AI_SERVICE_URL}/ai/recommend`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Internal-Api-Key': INTERNAL_API_KEY,
-      },
-      body: JSON.stringify(body),
-      signal: AbortSignal.timeout(5000),
-    });
-    if (!res.ok) return null;
-    const data = await res.json();
-    return data.recommendations ?? null;
-  } catch {
-    return null;
-  }
-}
-
-function simpleRecommend(
-  recipes: Record<string, unknown>[],
-  userIngredientIds: number[],
-) {
-  return recipes.map((recipe) => {
-    const recipeIngr = recipe.recipe_ingredients as Array<Record<string, unknown>>;
-    const matched: string[] = [];
-    const missing: string[] = [];
-
-    for (const ri of recipeIngr) {
-      const master = ri.ingredient_master as Record<string, unknown>;
-      const name = (master?.name as string) || 'unknown';
-      if (userIngredientIds.includes(ri.ingredient_id as number)) {
-        matched.push(name);
-      } else {
-        missing.push(name);
-      }
-    }
-
-    const total = recipeIngr.length;
-    const matchRatio = total > 0 ? matched.length / total : 0;
-
-    return {
-      recipe: {
-        id: recipe.id, title: recipe.title, description: recipe.description,
-        cuisineType: recipe.cuisine_type, difficulty: recipe.difficulty,
-        cookingTime: recipe.cooking_time, servings: recipe.servings,
-        thumbnailUrl: recipe.thumbnail_url, tags: recipe.tags,
-        avgRating: recipe.avg_rating, viewCount: recipe.view_count,
-      },
-      matchRatio,
-      matchedIngredients: matched,
-      missingIngredients: missing,
-      matchLabel: getMatchLabel(matchRatio),
-    };
-  }).sort((a, b) => b.matchRatio - a.matchRatio);
+  if (ratio >= 0.80) return '바로 요리 가능';
+  if (ratio >= 0.50) return '재료 조금 부족';
+  if (ratio >= 0.30) return '도전해보세요';
+  return '재료 부족';
 }
 
 export async function GET(request: NextRequest) {
@@ -143,7 +41,6 @@ export async function GET(request: NextRequest) {
     const limit = Number(searchParams.get('limit')) || 10;
     const supabase = getServiceSupabase();
 
-    // Fetch user ingredients with expiry and storage info
     const { data: userIngredients } = await supabase
       .from('user_ingredients')
       .select('ingredient_id, expiry_date, storage_type')
@@ -154,14 +51,12 @@ export async function GET(request: NextRequest) {
 
     if (userIngredientIds.length === 0) return successResponse([]);
 
-    // Find recipes that use at least 1 of user's ingredients
     const { data: matchingRecipeIds } = await supabase
       .from('recipe_ingredients').select('recipe_id').in('ingredient_id', userIngredientIds);
     const recipeIds = [...new Set((matchingRecipeIds || []).map((r) => r.recipe_id))];
 
     if (recipeIds.length === 0) return successResponse([]);
 
-    // Fetch full recipe data with ingredients
     const { data: recipes, error } = await supabase
       .from('recipes')
       .select(`
@@ -176,77 +71,87 @@ export async function GET(request: NextRequest) {
     if (error) return errorResponse('DB_ERROR', error.message, 500);
     if (!recipes || recipes.length === 0) return successResponse([]);
 
-    // Try AI service for smart recommendations
-    const aiResults = await callAIService(
-      recipes as unknown as Record<string, unknown>[],
-      userIngList as unknown as Record<string, unknown>[],
-      limit,
-    );
-
-    if (aiResults && aiResults.length > 0) {
-      // Build lookup maps
-      const recipeMap = new Map<number, Record<string, unknown>>();
-      for (const r of recipes) {
-        recipeMap.set(r.id as number, r as unknown as Record<string, unknown>);
-      }
-
-      const ingredientNameMap = new Map<number, string>();
-      for (const r of recipes) {
-        const ingrs = (r as unknown as Record<string, unknown>).recipe_ingredients as Array<Record<string, unknown>>;
-        for (const ri of ingrs) {
+    // 레시피 데이터를 엔진 입력 형식으로 변환
+    const recipeInputs: RecipeInput[] = recipes.map((r) => {
+      const ingredients = r.recipe_ingredients as Array<Record<string, unknown>>;
+      return {
+        id: r.id as number,
+        title: r.title as string,
+        description: r.description as string | null,
+        cuisine_type: r.cuisine_type as string | null,
+        difficulty: r.difficulty as string | null,
+        cooking_time: r.cooking_time as number | null,
+        servings: r.servings as number,
+        thumbnail_url: r.thumbnail_url as string | null,
+        tags: r.tags as string[],
+        avg_rating: (r.avg_rating as number) ?? 0,
+        view_count: (r.view_count as number) ?? 0,
+        ingredients: ingredients.map((ri) => {
           const master = ri.ingredient_master as Record<string, unknown>;
-          if (master?.id && master?.name) {
-            ingredientNameMap.set(master.id as number, master.name as string);
-          }
-        }
-      }
-
-      const recommendations = aiResults
-        .map((ai) => {
-          const recipe = recipeMap.get(ai.recipe_id);
-          if (!recipe) return null;
-
-          const recipeIngr = recipe.recipe_ingredients as Array<Record<string, unknown>>;
-          const matched: string[] = [];
-          const missing: string[] = [];
-
-          for (const ri of recipeIngr) {
-            const master = ri.ingredient_master as Record<string, unknown>;
-            const name = (master?.name as string) || 'unknown';
-            const ingId = master?.id as number;
-            if (ai.missing_ingredients.includes(ingId)) {
-              missing.push(name);
-            } else {
-              matched.push(name);
-            }
-          }
-
           return {
-            recipe: {
-              id: recipe.id, title: recipe.title, description: recipe.description,
-              cuisineType: recipe.cuisine_type, difficulty: recipe.difficulty,
-              cookingTime: recipe.cooking_time, servings: recipe.servings,
-              thumbnailUrl: recipe.thumbnail_url, tags: recipe.tags,
-              avgRating: recipe.avg_rating, viewCount: recipe.view_count,
-            },
-            matchRatio: ai.match_ratio,
-            matchedIngredients: matched,
-            missingIngredients: missing,
-            matchLabel: getMatchLabel(ai.match_ratio),
+            id: (master?.id ?? ri.ingredient_id) as number,
+            name: (master?.name as string) ?? 'unknown',
+            is_essential: (ri.is_essential as boolean) ?? true,
+            substitute_ids: [] as number[],
           };
-        })
-        .filter(Boolean);
+        }),
+      };
+    });
 
-      return successResponse(recommendations);
+    const userIngInputs: UserIngredientInput[] = userIngList.map((ui) => ({
+      ingredient_id: ui.ingredient_id,
+      expiry_date: ui.expiry_date ?? null,
+      storage_type: ui.storage_type ?? 'fridge',
+    }));
+
+    // 추천 엔진 실행
+    const aiResults = recommend(recipeInputs, userIngInputs, limit);
+
+    // 결과를 응답 형식으로 변환
+    const recipeMap = new Map<number, Record<string, unknown>>();
+    for (const r of recipes) {
+      recipeMap.set(r.id as number, r as unknown as Record<string, unknown>);
     }
 
-    // Fallback: simple ratio-based matching
-    const results = simpleRecommend(
-      recipes as unknown as Record<string, unknown>[],
-      userIngredientIds,
-    ).slice(0, limit);
+    const recommendations = aiResults
+      .map((ai) => {
+        const recipe = recipeMap.get(ai.recipe_id);
+        if (!recipe) return null;
 
-    return successResponse(results);
+        const recipeIngr = recipe.recipe_ingredients as Array<Record<string, unknown>>;
+        const matched: string[] = [];
+        const missing: string[] = [];
+
+        for (const ri of recipeIngr) {
+          const master = ri.ingredient_master as Record<string, unknown>;
+          const name = (master?.name as string) || 'unknown';
+          const ingId = master?.id as number;
+          if (ai.missing_ingredients.includes(ingId)) {
+            missing.push(name);
+          } else {
+            matched.push(name);
+          }
+        }
+
+        return {
+          recipe: {
+            id: recipe.id, title: recipe.title, description: recipe.description,
+            cuisineType: recipe.cuisine_type, difficulty: recipe.difficulty,
+            cookingTime: recipe.cooking_time, servings: recipe.servings,
+            thumbnailUrl: recipe.thumbnail_url, tags: recipe.tags,
+            avgRating: recipe.avg_rating, viewCount: recipe.view_count,
+          },
+          matchRatio: ai.match_ratio,
+          matchedIngredients: matched,
+          missingIngredients: missing,
+          matchLabel: ai.match_label,
+          totalScore: ai.total_score,
+          expiryScore: ai.expiry_score,
+        };
+      })
+      .filter(Boolean);
+
+    return successResponse(recommendations);
   } catch (e) {
     if (e instanceof AuthError) return errorResponse('UNAUTHORIZED', e.message, 401);
     return errorResponse('INTERNAL_ERROR', (e as Error).message, 500);

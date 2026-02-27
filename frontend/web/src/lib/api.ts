@@ -163,7 +163,7 @@ class ApiClient {
     return this.request<any>('/notifications');
   }
 
-  // Scan
+  // Scan — 즉시 결과 반환 (폴링 불필요)
   submitScan(type: 'receipt' | 'photo', imageBase64: string) {
     return this.request<any>('/scan', {
       method: 'POST',
@@ -171,6 +171,7 @@ class ApiClient {
     });
   }
 
+  /** @deprecated scan API가 즉시 결과를 반환하므로 더 이상 폴링 불필요 */
   getScanResult(taskId: string) {
     return this.request<any>(`/scan/result/${taskId}`);
   }

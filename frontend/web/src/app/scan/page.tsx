@@ -57,39 +57,23 @@ export default function ScanPage() {
 
     try {
       const submitRes = await api.submitScan(scanType, imagePreview);
-      if (!submitRes?.data?.taskId) {
+      if (!submitRes?.data) {
         throw new Error('Failed to submit scan');
       }
 
-      const taskId = submitRes.data.taskId;
-
-      // Poll for results
-      let attempts = 0;
-      const maxAttempts = 30;
-      while (attempts < maxAttempts) {
-        const resultRes = await api.getScanResult(taskId);
-        if (resultRes?.data?.status === 'done') {
-          const scannedItems: ScannedItem[] = (resultRes.data.items || []).map(
-            (item: Record<string, unknown>) => ({
-              name: item.name as string,
-              quantity: item.quantity as number | undefined,
-              unit: item.unit as string | undefined,
-              confidence: (item.confidence as number) || 0.8,
-              selected: true,
-            }),
-          );
-          setItems(scannedItems);
-          setStep('results');
-          setProcessing(false);
-          return;
-        }
-        if (resultRes?.data?.status === 'failed') {
-          throw new Error(resultRes.data.error || 'Scan failed');
-        }
-        await new Promise((r) => setTimeout(r, 1000));
-        attempts++;
-      }
-      throw new Error('Scan timed out');
+      const scannedItems: ScannedItem[] = (submitRes.data.items || []).map(
+        (item: Record<string, unknown>) => ({
+          name: item.name as string,
+          quantity: item.quantity as number | undefined,
+          unit: item.unit as string | undefined,
+          confidence: (item.confidence as number) || 0.8,
+          selected: true,
+        }),
+      );
+      setItems(scannedItems);
+      setStep('results');
+      setProcessing(false);
+      return;
     } catch {
       setStep('select');
       setProcessing(false);
