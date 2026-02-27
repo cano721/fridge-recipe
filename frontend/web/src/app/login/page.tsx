@@ -11,6 +11,8 @@ const ERROR_MESSAGES: Record<string, string> = {
   google_token_failed: 'Google 인증에 실패했습니다. 다시 시도해주세요.',
   kakao_error: '카카오 로그인 중 오류가 발생했습니다.',
   google_error: 'Google 로그인 중 오류가 발생했습니다.',
+  kakao_not_configured: '카카오 로그인이 아직 준비 중입니다.',
+  google_not_configured: 'Google 로그인이 아직 준비 중입니다.',
   db_error: '사용자 등록 중 오류가 발생했습니다.',
   no_token: '인증 토큰을 받지 못했습니다.',
 };

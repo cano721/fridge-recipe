@@ -10,10 +10,8 @@ function getBaseUrl(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   if (!KAKAO_CLIENT_ID) {
-    return Response.json(
-      { success: false, error: { code: 'NOT_CONFIGURED', message: '카카오 로그인이 설정되지 않았습니다.' } },
-      { status: 503 },
-    );
+    const baseUrl = getBaseUrl(request);
+    return Response.redirect(`${baseUrl}/login?error=kakao_not_configured`);
   }
 
   const baseUrl = getBaseUrl(request);
