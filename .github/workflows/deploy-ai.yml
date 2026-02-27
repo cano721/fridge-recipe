@@ -1,0 +1,31 @@
+name: Deploy AI Service
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'backend/ai-service/**'
+
+jobs:
+  deploy-railway:
+    name: Deploy to Railway
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
+
+      - name: Deploy AI Service
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: |
+          cd backend/ai-service
+          railway up --service ai-service
+
+      - name: Deploy Celery Worker
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: |
+          cd backend/ai-service
+          railway up --service celery-worker --dockerfile Dockerfile.worker
