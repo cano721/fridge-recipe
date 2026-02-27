@@ -41,34 +41,21 @@ services:
       timeout: 5s
       retries: 5
 
-  main-api:
+  web:
     build:
-      context: ./backend/main-api
+      context: ./frontend/web
       dockerfile: Dockerfile
-    container_name: fridge-recipe-api
+    container_name: fridge-recipe-web
     environment:
-      DB_HOST: postgres
-      DB_PORT: 5432
-      DB_NAME: ${POSTGRES_DB:-fridge_recipe}
-      DB_USER: ${POSTGRES_USER:-fridge}
-      DB_PASSWORD: ${POSTGRES_PASSWORD:-fridge1234}
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-      REDIS_PASSWORD: ${REDIS_PASSWORD:-redis1234}
-      AI_SERVICE_URL: http://ai-service:8000
-      AI_SERVICE_API_KEY: ${INTERNAL_API_KEY:-dev-internal-key}
+      NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL:-}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY:-}
+      SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY:-}
       JWT_SECRET: ${JWT_SECRET:-dev-jwt-secret-change-in-production}
-      JWT_ISSUER: ${JWT_ISSUER:-fridge-recipe}
-      JWT_AUDIENCE: ${JWT_AUDIENCE:-fridge-recipe-app}
+      AI_SERVICE_URL: http://ai-service:8000
     ports:
-      - "${API_PORT:-8080}:8080"
+      - "${WEB_PORT:-3000}:3000"
     depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      flyway:
-        condition: service_completed_successfully
+      - redis
 
   ai-service:
     build:
