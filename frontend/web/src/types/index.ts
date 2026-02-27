@@ -80,8 +80,25 @@ export interface RecipeRecommendation {
   matchLabel: string;
 }
 
+export interface CookingHistory {
+  id: number;
+  recipeId: number;
+  recipeTitle: string;
+  recipeThumbnailUrl: string | null;
+  cookedAt: string;
+  rating: number | null;
+  memo: string | null;
+}
+
+export interface RecipeLike {
+  recipeId: number;
+  createdAt: string;
+}
+
 export type StorageType = 'fridge' | 'freezer' | 'room';
 export type ExpiryStatus = 'safe' | 'soon' | 'urgent' | 'expired';
+export type Difficulty = 'easy' | 'medium' | 'hard';
+export type RecipeSortBy = 'recommended' | 'rating' | 'cookingTime' | 'newest';
 
 export interface ApiResponse<T> {
   success: boolean;

@@ -6,6 +6,7 @@ import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
 import { Ingredient, IngredientMaster, StorageType } from '@/types';
 import { getCategoryEmoji, getStorageLabel, getStorageEmoji } from '@/lib/utils';
+import { mockIngredientMaster, mockCategories } from '@/lib/mock-data';
 import ExpiryBadge from '@/components/ui/ExpiryBadge';
 import EmptyState from '@/components/ui/EmptyState';
 import { SkeletonListItem } from '@/components/ui/LoadingSpinner';
@@ -34,8 +35,14 @@ interface AddModalProps {
   onAdded: () => void;
 }
 
+const categoryStorageMap: Record<string, StorageType> = {
+  '채소': 'fridge', '육류': 'fridge', '해산물': 'fridge', '유제품': 'fridge',
+  '양념': 'room', '곡물': 'room', '과일': 'fridge',
+};
+
 function AddIngredientModal({ onClose, onAdded }: AddModalProps) {
   const [query, setQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [searchResults, setSearchResults] = useState<IngredientMaster[]>([]);
   const [selected, setSelected] = useState<IngredientMaster | null>(null);
   const [quantity, setQuantity] = useState('');
@@ -44,6 +51,18 @@ function AddIngredientModal({ onClose, onAdded }: AddModalProps) {
   const [storageType, setStorageType] = useState<StorageType>('fridge');
   const [searching, setSearching] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [recentIngredients, setRecentIngredients] = useState<IngredientMaster[]>([]);
+
+  useEffect(() => {
+    api.getIngredients().then((res) => {
+      if (!res?.data) return;
+      const ids = res.data.map((i: { ingredientId: number }) => i.ingredientId);
+      const recents = ids
+        .map((id: number) => mockIngredientMaster.find((m) => m.id === id))
+        .filter(Boolean) as IngredientMaster[];
+      setRecentIngredients(recents.slice(0, 8));
+    }).catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (!query.trim()) {
@@ -70,7 +89,39 @@ function AddIngredientModal({ onClose, onAdded }: AddModalProps) {
     setUnit(master.defaultUnit || '');
     setSearchResults([]);
     setQuery(master.name);
+    setSelectedCategory(null);
+    if (master.defaultExpiryDays) {
+      const date = new Date();
+      date.setDate(date.getDate() + master.defaultExpiryDays);
+      setExpiryDate(date.toISOString().split('T')[0]);
+    }
+    setStorageType(categoryStorageMap[master.category] || 'fridge');
   }
+
+  function handleCategorySelect(cat: string) {
+    if (selectedCategory === cat) {
+      setSelectedCategory(null);
+    } else {
+      setSelectedCategory(cat);
+      setQuery('');
+      setSelected(null);
+      setSearchResults([]);
+    }
+  }
+
+  function handleQueryChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setQuery(e.target.value);
+    setSelected(null);
+    setSelectedCategory(null);
+  }
+
+  const categoryResults = selectedCategory
+    ? mockIngredientMaster.filter((m) => m.category === selectedCategory)
+    : [];
+
+  const showRecent = !query.trim() && !selectedCategory && !selected;
+  const showSearchResults = !searching && searchResults.length > 0;
+  const showCategoryResults = !!selectedCategory && !selected;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -114,20 +165,75 @@ function AddIngredientModal({ onClose, onAdded }: AddModalProps) {
             type="text"
             placeholder="식재료 검색..."
             value={query}
-            onChange={(e) => {
-              setQuery(e.target.value);
-              setSelected(null);
-            }}
+            onChange={handleQueryChange}
             className="w-full h-14 pl-10 pr-4 border-[1.5px] border-outline rounded-xl text-sm focus:outline-none focus:border-primary focus:border-2 bg-surface"
           />
         </div>
 
+        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+          {mockCategories.map((cat) => (
+            <button
+              key={cat}
+              type="button"
+              onClick={() => handleCategorySelect(cat)}
+              className={`shrink-0 h-8 px-3 rounded-lg text-sm font-medium border transition-colors ${
+                selectedCategory === cat
+                  ? 'bg-primary text-white border-primary'
+                  : 'bg-surface border-outline text-on-surface-variant'
+              }`}
+              style={{ transitionDuration: 'var(--duration-fast)' }}
+            >
+              {getCategoryEmoji(cat)} {cat}
+            </button>
+          ))}
+        </div>
+
+        {showRecent && recentIngredients.length > 0 && (
+          <div>
+            <p className="text-xs font-medium text-on-surface-variant mb-2">최근 추가한 재료</p>
+            <div className="flex gap-2 flex-wrap">
+              {recentIngredients.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => handleSelect(item)}
+                  className="shrink-0 h-8 px-3 rounded-lg text-sm font-medium border border-outline bg-surface text-on-surface-variant transition-colors hover:bg-surface-variant"
+                  style={{ transitionDuration: 'var(--duration-fast)' }}
+                >
+                  {getCategoryEmoji(item.category)} {item.name}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         {searching && (
           <p className="text-xs text-on-surface-variant text-center py-2">검색 중...</p>
         )}
-        {!searching && searchResults.length > 0 && (
+
+        {showSearchResults && (
           <ul className="border border-outline rounded-xl overflow-hidden divide-y divide-outline-variant">
             {searchResults.map((item) => (
+              <li key={item.id}>
+                <button
+                  type="button"
+                  onClick={() => handleSelect(item)}
+                  className="w-full px-4 py-3 text-left flex items-center gap-3 hover:bg-surface-variant active:bg-surface-variant transition-colors"
+                >
+                  <span className="text-xl">{getCategoryEmoji(item.category)}</span>
+                  <div>
+                    <p className="text-sm font-medium text-on-surface">{item.name}</p>
+                    <p className="text-xs text-on-surface-variant">{item.category}</p>
+                  </div>
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        {showCategoryResults && (
+          <ul className="border border-outline rounded-xl overflow-hidden divide-y divide-outline-variant">
+            {categoryResults.map((item) => (
               <li key={item.id}>
                 <button
                   type="button"

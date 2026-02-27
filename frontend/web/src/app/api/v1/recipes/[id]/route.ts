@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { isSupabaseConfigured, getServiceSupabase } from '@/lib/supabase';
 import { getUserId, successResponse, errorResponse } from '@/lib/auth';
-import { mockRecipes, mockUserIngredients } from '@/lib/mock-data';
+import { mockRecipes, mockUserIngredients, mockRecipeLikes, mockUserLikes } from '@/lib/mock-data';
 
 export async function GET(
   request: NextRequest,
@@ -30,6 +30,8 @@ export async function GET(
         avgRating: recipe.avgRating, viewCount: recipe.viewCount,
         steps: recipe.steps, nutrition: recipe.nutrition,
         ingredients, isBookmarked: false,
+        likeCount: mockRecipeLikes[id] || 0,
+        isLiked: mockUserLikes.includes(id),
       });
     }
 
@@ -50,16 +52,25 @@ export async function GET(
     if (error) return errorResponse('NOT_FOUND', '레시피를 찾을 수 없습니다.', 404);
 
     let isBookmarked = false;
+    let isLiked = false;
     let userIngredientIds: number[] = [];
+    const likeCountRes = await supabase
+      .from('recipe_likes')
+      .select('*', { count: 'exact', head: true })
+      .eq('recipe_id', id);
+    const likeCount = likeCountRes.count || 0;
     if (userId) {
-      const [bookmarkRes, ingredientsRes] = await Promise.all([
+      const [bookmarkRes, ingredientsRes, likeRes] = await Promise.all([
         supabase.from('bookmarks').select('user_id')
           .eq('user_id', userId).eq('recipe_id', id).maybeSingle(),
         supabase.from('user_ingredients').select('ingredient_id')
           .eq('user_id', userId),
+        supabase.from('recipe_likes').select('user_id')
+          .eq('user_id', userId).eq('recipe_id', id).maybeSingle(),
       ]);
       isBookmarked = !!bookmarkRes.data;
       userIngredientIds = (ingredientsRes.data || []).map((i) => i.ingredient_id);
+      isLiked = !!likeRes.data;
     }
 
     await supabase.from('recipes').update({ view_count: (recipe.view_count || 0) + 1 }).eq('id', id);
@@ -97,7 +108,7 @@ export async function GET(
       })) : [],
       nutrition,
       tags: recipe.tags, avgRating: recipe.avg_rating, viewCount: recipe.view_count,
-      ingredients, isBookmarked,
+      ingredients, isBookmarked, likeCount, isLiked,
     });
   } catch (e) {
     return errorResponse('INTERNAL_ERROR', (e as Error).message, 500);

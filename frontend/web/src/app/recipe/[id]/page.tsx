@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef, use } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Heart, Clock, Users, ChefHat, Star, Play, Pause, RotateCcw, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowLeft, Heart, Clock, Users, ChefHat, Star, Play, Pause, RotateCcw, X, ChevronLeft, ChevronRight, Share2 } from "lucide-react";
 import { api } from "@/lib/api";
 import type { RecipeDetail, CookingStep } from "@/types";
 import { getDifficultyLabel, formatCookingTime } from "@/lib/utils";
@@ -96,7 +96,7 @@ function NutritionBar({ label, value, unit, max, color }: {
 }
 
 // --- Cooking Mode Overlay ---
-function CookingMode({ steps, onClose }: { steps: CookingStep[]; onClose: () => void }) {
+function CookingMode({ steps, onClose, onComplete }: { steps: CookingStep[]; onClose: () => void; onComplete: () => void }) {
   const [currentStep, setCurrentStep] = useState(0);
   const step = steps[currentStep];
 
@@ -140,7 +140,7 @@ function CookingMode({ steps, onClose }: { steps: CookingStep[]; onClose: () => 
       </div>
 
       {/* Navigation */}
-      <div className="px-4 pb-8 flex gap-3">
+      <div className="px-4 pb-24 flex gap-3">
         <button
           onClick={() => setCurrentStep((p) => Math.max(0, p - 1))}
           disabled={currentStep === 0}
@@ -157,7 +157,7 @@ function CookingMode({ steps, onClose }: { steps: CookingStep[]; onClose: () => 
           </button>
         ) : (
           <button
-            onClick={onClose}
+            onClick={() => { onComplete(); onClose(); }}
             className="flex-1 h-12 rounded-xl bg-safe text-white flex items-center justify-center gap-1 text-sm font-medium active:scale-[0.97] transition-transform"
           >
             완료!
@@ -177,6 +177,9 @@ export default function RecipeDetailPage({ params }: PageProps) {
   const [bookmarked, setBookmarked] = useState(false);
   const [bookmarkLoading, setBookmarkLoading] = useState(false);
   const [cookingMode, setCookingMode] = useState(false);
+  const [liked, setLiked] = useState(false);
+  const [likeCount, setLikeCount] = useState(0);
+  const [shareToast, setShareToast] = useState(false);
 
   useEffect(() => {
     loadRecipe();
@@ -189,6 +192,8 @@ export default function RecipeDetailPage({ params }: PageProps) {
       if (res.success && res.data) {
         setRecipe(res.data);
         setBookmarked(res.data.isBookmarked || false);
+        setLiked(res.data.isLiked || false);
+        setLikeCount(res.data.likeCount || 0);
       }
     } finally {
       setLoading(false);
@@ -208,6 +213,38 @@ export default function RecipeDetailPage({ params }: PageProps) {
     } finally {
       setBookmarkLoading(false);
     }
+  }
+
+  async function handleLike() {
+    try {
+      if (liked) {
+        await api.unlikeRecipe(Number(id));
+        setLikeCount(prev => Math.max(0, prev - 1));
+      } else {
+        await api.likeRecipe(Number(id));
+        setLikeCount(prev => prev + 1);
+      }
+      setLiked(prev => !prev);
+    } catch {}
+  }
+
+  async function handleShare() {
+    const shareData = { title: recipe!.title, text: recipe!.description || '', url: window.location.href };
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else {
+        await navigator.clipboard.writeText(window.location.href);
+        setShareToast(true);
+        setTimeout(() => setShareToast(false), 2000);
+      }
+    } catch {}
+  }
+
+  async function handleCookingComplete() {
+    try {
+      await api.addCookingHistory({ recipeId: Number(id) });
+    } catch {}
   }
 
   if (loading) {
@@ -256,7 +293,7 @@ export default function RecipeDetailPage({ params }: PageProps) {
     <div className="min-h-screen bg-surface pb-8">
       {/* Cooking Mode Overlay */}
       {cookingMode && recipe.steps && recipe.steps.length > 0 && (
-        <CookingMode steps={recipe.steps} onClose={() => setCookingMode(false)} />
+        <CookingMode steps={recipe.steps} onClose={() => setCookingMode(false)} onComplete={handleCookingComplete} />
       )}
 
       {/* Hero section */}
@@ -310,6 +347,18 @@ export default function RecipeDetailPage({ params }: PageProps) {
               <span className="text-xs text-on-surface-variant">{recipe.avgRating.toFixed(1)}</span>
             </div>
           )}
+        </div>
+
+        {/* 좋아요 & 공유 */}
+        <div className="flex items-center gap-3">
+          <button onClick={handleLike} className="flex items-center gap-1.5 bg-surface-variant rounded-lg px-3 h-8 active:scale-95 transition-transform">
+            <Heart size={14} className={liked ? "text-accent fill-accent" : "text-on-surface-variant"} />
+            <span className="text-xs text-on-surface-variant">{likeCount}</span>
+          </button>
+          <button onClick={handleShare} className="flex items-center gap-1.5 bg-surface-variant rounded-lg px-3 h-8 active:scale-95 transition-transform">
+            <Share2 size={14} className="text-on-surface-variant" />
+            <span className="text-xs text-on-surface-variant">공유</span>
+          </button>
         </div>
 
         {/* Tags */}
@@ -410,6 +459,12 @@ export default function RecipeDetailPage({ params }: PageProps) {
           <Play size={16} /> 요리 시작하기
         </button>
       </div>
+
+      {shareToast && (
+        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 bg-on-surface text-surface px-4 py-2 rounded-lg text-sm z-50">
+          링크가 복사되었습니다
+        </div>
+      )}
     </div>
   );
 }

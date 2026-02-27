@@ -92,6 +92,10 @@ class ApiClient {
     return this.request<any>('/users/me');
   }
 
+  updateProfile(body: { nickname: string }) {
+    return this.request<any>('/users/me', { method: 'PUT', body: JSON.stringify(body) });
+  }
+
   // Recipes
   getRecommendations(limit?: number) {
     const query = limit ? `?limit=${limit}` : '';
@@ -102,9 +106,13 @@ class ApiClient {
     return this.request<any>(`/recipes/${id}`);
   }
 
-  searchRecipes(query: string, cuisineType?: string) {
+  searchRecipes(query: string, options?: { cuisineType?: string; difficulty?: string; maxCookingTime?: number; ingredientIds?: number[]; sort?: string }) {
     let path = `/recipes/search?q=${encodeURIComponent(query)}`;
-    if (cuisineType) path += `&cuisineType=${cuisineType}`;
+    if (options?.cuisineType) path += `&cuisineType=${options.cuisineType}`;
+    if (options?.difficulty) path += `&difficulty=${options.difficulty}`;
+    if (options?.maxCookingTime) path += `&maxCookingTime=${options.maxCookingTime}`;
+    if (options?.ingredientIds?.length) path += `&ingredientIds=${options.ingredientIds.join(',')}`;
+    if (options?.sort) path += `&sort=${options.sort}`;
     return this.request<any>(path);
   }
 
@@ -118,6 +126,24 @@ class ApiClient {
 
   getBookmarks() {
     return this.request<any>('/recipes/bookmarks');
+  }
+
+  // Likes
+  likeRecipe(recipeId: number) {
+    return this.request<any>(`/recipes/${recipeId}/like`, { method: 'POST' });
+  }
+
+  unlikeRecipe(recipeId: number) {
+    return this.request<any>(`/recipes/${recipeId}/like`, { method: 'DELETE' });
+  }
+
+  // Cooking History
+  getCookingHistory() {
+    return this.request<any>('/users/me/history');
+  }
+
+  addCookingHistory(body: { recipeId: number; rating?: number; memo?: string }) {
+    return this.request<any>('/users/me/history', { method: 'POST', body: JSON.stringify(body) });
   }
 
   // Preferences

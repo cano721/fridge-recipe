@@ -9,9 +9,8 @@ import {
   Bell,
   UserCog,
   Bookmark,
-  Megaphone,
-  HelpCircle,
-  FileText,
+  Clock,
+  ChefHat,
   ChevronRight,
   LogOut,
 } from 'lucide-react';
@@ -20,16 +19,14 @@ import EmptyState from '@/components/ui/EmptyState';
 interface UserStats {
   ingredientCount: number;
   savedRecipeCount: number;
-  scanCount: number;
+  weekCookCount: number;
 }
 
 const menuItems = [
+  { label: '프로필 수정', icon: UserCog, href: '/mypage/edit' },
+  { label: '내 북마크', icon: Bookmark, href: '/mypage/bookmarks' },
+  { label: '조리 이력', icon: Clock, href: '/mypage/history' },
   { label: '알림 설정', icon: Bell, href: '/settings' },
-  { label: '프로필 수정', icon: UserCog, href: '/settings' },
-  { label: '북마크', icon: Bookmark, href: '/recipe?tab=bookmarks' },
-  { label: '공지사항', icon: Megaphone, href: '#' },
-  { label: '문의하기', icon: HelpCircle, href: '#' },
-  { label: '이용약관', icon: FileText, href: '#' },
 ] as const;
 
 export default function MyPage() {
@@ -38,7 +35,7 @@ export default function MyPage() {
   const [stats, setStats] = useState<UserStats>({
     ingredientCount: 0,
     savedRecipeCount: 0,
-    scanCount: 0,
+    weekCookCount: 0,
   });
 
   useEffect(() => {
@@ -46,14 +43,23 @@ export default function MyPage() {
 
     const fetchStats = async () => {
       try {
-        const [ingredientsRes, bookmarksRes] = await Promise.all([
+        const [ingredientsRes, bookmarksRes, historyRes] = await Promise.all([
           api.getIngredients(),
           api.getBookmarks(),
+          api.getCookingHistory(),
         ]);
+
+        const history = historyRes?.data || [];
+        const weekAgo = new Date();
+        weekAgo.setDate(weekAgo.getDate() - 7);
+        const weekCookCount = history.filter(
+          (h: { cookedAt: string }) => new Date(h.cookedAt) >= weekAgo
+        ).length;
+
         setStats({
           ingredientCount: ingredientsRes?.data?.length ?? 0,
           savedRecipeCount: bookmarksRes?.data?.length ?? 0,
-          scanCount: 0,
+          weekCookCount,
         });
       } catch {
         // silent
@@ -62,17 +68,11 @@ export default function MyPage() {
     fetchStats();
   }, [isLoggedIn]);
 
-  const handleMenuClick = (href: string) => {
-    if (href === '#') return;
-    router.push(href);
-  };
-
   const handleLogout = () => {
     logout();
     router.push('/login');
   };
 
-  // Auth guard
   if (!authLoading && !isLoggedIn) {
     return (
       <div className="min-h-screen bg-surface-variant">
@@ -128,8 +128,8 @@ export default function MyPage() {
               <span className="text-xs text-on-surface-variant mt-1">저장 레시피</span>
             </div>
             <div className="flex flex-col items-center py-5">
-              <span className="text-2xl font-bold text-primary">{stats.scanCount}</span>
-              <span className="text-xs text-on-surface-variant mt-1">스캔 횟수</span>
+              <span className="text-2xl font-bold text-primary">{stats.weekCookCount}</span>
+              <span className="text-xs text-on-surface-variant mt-1">이번 주 조리</span>
             </div>
           </div>
         </section>
@@ -144,7 +144,7 @@ export default function MyPage() {
             return (
               <button
                 key={item.label}
-                onClick={() => handleMenuClick(item.href)}
+                onClick={() => router.push(item.href)}
                 className={`w-full flex items-center gap-3 px-5 py-4 active:bg-primary-50 transition-colors ${
                   index < menuItems.length - 1 ? 'border-b border-outline-variant' : ''
                 }`}

@@ -1,34 +1,34 @@
 // Mock data for when Supabase is not configured
 
 export const mockIngredientMaster = [
-  { id: 1, name: '양파', category: '채소', iconUrl: null, defaultUnit: '개' },
-  { id: 2, name: '대파', category: '채소', iconUrl: null, defaultUnit: '대' },
-  { id: 3, name: '마늘', category: '채소', iconUrl: null, defaultUnit: '쪽' },
-  { id: 4, name: '감자', category: '채소', iconUrl: null, defaultUnit: '개' },
-  { id: 5, name: '당근', category: '채소', iconUrl: null, defaultUnit: '개' },
-  { id: 6, name: '토마토', category: '채소', iconUrl: null, defaultUnit: '개' },
-  { id: 7, name: '시금치', category: '채소', iconUrl: null, defaultUnit: 'g' },
-  { id: 8, name: '버섯', category: '채소', iconUrl: null, defaultUnit: 'g' },
-  { id: 9, name: '애호박', category: '채소', iconUrl: null, defaultUnit: '개' },
-  { id: 10, name: '고추', category: '채소', iconUrl: null, defaultUnit: '개' },
-  { id: 11, name: '돼지고기', category: '육류', iconUrl: null, defaultUnit: 'g' },
-  { id: 12, name: '소고기', category: '육류', iconUrl: null, defaultUnit: 'g' },
-  { id: 13, name: '닭고기', category: '육류', iconUrl: null, defaultUnit: 'g' },
-  { id: 14, name: '계란', category: '육류', iconUrl: null, defaultUnit: '개' },
-  { id: 15, name: '새우', category: '해산물', iconUrl: null, defaultUnit: 'g' },
-  { id: 16, name: '우유', category: '유제품', iconUrl: null, defaultUnit: 'ml' },
-  { id: 17, name: '치즈', category: '유제품', iconUrl: null, defaultUnit: 'g' },
-  { id: 18, name: '간장', category: '양념', iconUrl: null, defaultUnit: 'ml' },
-  { id: 19, name: '된장', category: '양념', iconUrl: null, defaultUnit: 'g' },
-  { id: 20, name: '고추장', category: '양념', iconUrl: null, defaultUnit: 'g' },
-  { id: 21, name: '참기름', category: '양념', iconUrl: null, defaultUnit: 'ml' },
-  { id: 22, name: '식용유', category: '양념', iconUrl: null, defaultUnit: 'ml' },
-  { id: 23, name: '소금', category: '양념', iconUrl: null, defaultUnit: 'g' },
-  { id: 24, name: '설탕', category: '양념', iconUrl: null, defaultUnit: 'g' },
-  { id: 25, name: '쌀', category: '곡물', iconUrl: null, defaultUnit: 'g' },
-  { id: 26, name: '파스타', category: '곡물', iconUrl: null, defaultUnit: 'g' },
-  { id: 27, name: '멸치', category: '해산물', iconUrl: null, defaultUnit: 'g' },
-  { id: 28, name: '레몬', category: '과일', iconUrl: null, defaultUnit: '개' },
+  { id: 1, name: '양파', category: '채소', iconUrl: null, defaultUnit: '개', defaultExpiryDays: 30 },
+  { id: 2, name: '대파', category: '채소', iconUrl: null, defaultUnit: '대', defaultExpiryDays: 14 },
+  { id: 3, name: '마늘', category: '채소', iconUrl: null, defaultUnit: '쪽', defaultExpiryDays: 60 },
+  { id: 4, name: '감자', category: '채소', iconUrl: null, defaultUnit: '개', defaultExpiryDays: 30 },
+  { id: 5, name: '당근', category: '채소', iconUrl: null, defaultUnit: '개', defaultExpiryDays: 21 },
+  { id: 6, name: '토마토', category: '채소', iconUrl: null, defaultUnit: '개', defaultExpiryDays: 7 },
+  { id: 7, name: '시금치', category: '채소', iconUrl: null, defaultUnit: 'g', defaultExpiryDays: 5 },
+  { id: 8, name: '버섯', category: '채소', iconUrl: null, defaultUnit: 'g', defaultExpiryDays: 7 },
+  { id: 9, name: '애호박', category: '채소', iconUrl: null, defaultUnit: '개', defaultExpiryDays: 10 },
+  { id: 10, name: '고추', category: '채소', iconUrl: null, defaultUnit: '개', defaultExpiryDays: 14 },
+  { id: 11, name: '돼지고기', category: '육류', iconUrl: null, defaultUnit: 'g', defaultExpiryDays: 3 },
+  { id: 12, name: '소고기', category: '육류', iconUrl: null, defaultUnit: 'g', defaultExpiryDays: 3 },
+  { id: 13, name: '닭고기', category: '육류', iconUrl: null, defaultUnit: 'g', defaultExpiryDays: 2 },
+  { id: 14, name: '계란', category: '육류', iconUrl: null, defaultUnit: '개', defaultExpiryDays: 21 },
+  { id: 15, name: '새우', category: '해산물', iconUrl: null, defaultUnit: 'g', defaultExpiryDays: 2 },
+  { id: 16, name: '우유', category: '유제품', iconUrl: null, defaultUnit: 'ml', defaultExpiryDays: 7 },
+  { id: 17, name: '치즈', category: '유제품', iconUrl: null, defaultUnit: 'g', defaultExpiryDays: 30 },
+  { id: 18, name: '간장', category: '양념', iconUrl: null, defaultUnit: 'ml', defaultExpiryDays: 365 },
+  { id: 19, name: '된장', category: '양념', iconUrl: null, defaultUnit: 'g', defaultExpiryDays: 180 },
+  { id: 20, name: '고추장', category: '양념', iconUrl: null, defaultUnit: 'g', defaultExpiryDays: 180 },
+  { id: 21, name: '참기름', category: '양념', iconUrl: null, defaultUnit: 'ml', defaultExpiryDays: 180 },
+  { id: 22, name: '식용유', category: '양념', iconUrl: null, defaultUnit: 'ml', defaultExpiryDays: 365 },
+  { id: 23, name: '소금', category: '양념', iconUrl: null, defaultUnit: 'g', defaultExpiryDays: 365 },
+  { id: 24, name: '설탕', category: '양념', iconUrl: null, defaultUnit: 'g', defaultExpiryDays: 365 },
+  { id: 25, name: '쌀', category: '곡물', iconUrl: null, defaultUnit: 'g', defaultExpiryDays: 180 },
+  { id: 26, name: '파스타', category: '곡물', iconUrl: null, defaultUnit: 'g', defaultExpiryDays: 365 },
+  { id: 27, name: '멸치', category: '해산물', iconUrl: null, defaultUnit: 'g', defaultExpiryDays: 180 },
+  { id: 28, name: '레몬', category: '과일', iconUrl: null, defaultUnit: '개', defaultExpiryDays: 14 },
 ];
 
 function getFutureDate(days: number): string {
@@ -95,6 +95,19 @@ export const mockRecipes = [
     nutrition: { calories: 220, protein: 20, fat: 10, carbs: 8 },
     ingredients: [{ ingredientId: 12, name: '소고기', quantity: '150g', isEssential: true }, { ingredientId: 21, name: '참기름', quantity: '1큰술', isEssential: true }],
   },
+];
+
+export const mockRecipeLikes: Record<number, number> = {
+  1: 42, 2: 28, 3: 65, 4: 15, 5: 38, 6: 51,
+};
+
+export const mockUserLikes: number[] = [1, 3];
+
+export const mockCookingHistory = [
+  { id: 1, recipeId: 1, recipeTitle: '김치볶음밥', recipeThumbnailUrl: null, cookedAt: getFutureDate(-1), rating: 4, memo: '맛있었다!' },
+  { id: 2, recipeId: 3, recipeTitle: '된장찌개', recipeThumbnailUrl: null, cookedAt: getFutureDate(-3), rating: 5, memo: '구수하고 좋았음' },
+  { id: 3, recipeId: 5, recipeTitle: '계란말이', recipeThumbnailUrl: null, cookedAt: getFutureDate(-5), rating: 4, memo: null },
+  { id: 4, recipeId: 2, recipeTitle: '토마토 파스타', recipeThumbnailUrl: null, cookedAt: getFutureDate(-7), rating: 3, memo: '소스가 좀 싱거웠다' },
 ];
 
 export const mockUser = {
