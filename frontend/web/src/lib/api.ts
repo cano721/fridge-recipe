@@ -119,6 +119,18 @@ class ApiClient {
   getBookmarks() {
     return this.request<any>('/recipes/bookmarks');
   }
+
+  // Scan
+  submitScan(type: 'receipt' | 'photo', imageBase64: string) {
+    return this.request<any>('/scan', {
+      method: 'POST',
+      body: JSON.stringify({ type, image: imageBase64 }),
+    });
+  }
+
+  getScanResult(taskId: string) {
+    return this.request<any>(`/scan/result/${taskId}`);
+  }
 }
 
 export const api = new ApiClient();
