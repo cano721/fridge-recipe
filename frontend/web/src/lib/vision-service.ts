@@ -21,6 +21,15 @@ export async function recognizeIngredients(imageUrl: string): Promise<VisionItem
     return [{ name: '식재료 인식 미설정', confidence: 0.0 }];
   }
 
+  try {
+    return await callVisionAPI(imageUrl);
+  } catch (e) {
+    console.error('Vision API failed, returning mock:', (e as Error).message);
+    return [{ name: '식재료 인식 미설정', confidence: 0.0 }];
+  }
+}
+
+async function callVisionAPI(imageUrl: string): Promise<VisionItem[]> {
   const payload = {
     model: 'gpt-4o',
     messages: [
@@ -56,3 +65,4 @@ export async function recognizeIngredients(imageUrl: string): Promise<VisionItem
   if (Array.isArray(parsed)) return parsed;
   return parsed.ingredients ?? parsed.items ?? [];
 }
+

@@ -148,13 +148,18 @@ export async function recognizeReceipt(imageBase64: string): Promise<ParsedItem[
     return mockResult();
   }
 
-  // 1단계: OCR
-  const text = await extractTextFromImage(imageBase64);
-  if (!text.trim()) return [];
+  try {
+    // 1단계: OCR
+    const text = await extractTextFromImage(imageBase64);
+    if (!text.trim()) return [];
 
-  // 2단계: 파싱 (GPT 사용 가능하면 GPT, 아니면 규칙 기반)
-  if (OPENAI_API_KEY) {
-    return parseReceiptWithGPT(text);
+    // 2단계: 파싱 (GPT 사용 가능하면 GPT, 아니면 규칙 기반)
+    if (OPENAI_API_KEY) {
+      return parseReceiptWithGPT(text);
+    }
+    return parseReceiptByRules(text);
+  } catch (e) {
+    console.error('OCR failed, returning mock:', (e as Error).message);
+    return mockResult();
   }
-  return parseReceiptByRules(text);
 }
