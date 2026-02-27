@@ -87,6 +87,11 @@ class ApiClient {
     });
   }
 
+  // Users
+  getMe() {
+    return this.request<any>('/users/me');
+  }
+
   // Recipes
   getRecommendations(limit?: number) {
     const query = limit ? `?limit=${limit}` : '';

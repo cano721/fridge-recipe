@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import BottomNav from "@/components/layout/BottomNav";
+import { AuthProvider } from "@/lib/auth-context";
 
 export const metadata: Metadata = {
   title: "냉장고 레시피",
@@ -11,10 +12,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="ko">
       <body className="bg-surface-variant min-h-screen">
-        <div className="mx-auto max-w-md min-h-screen bg-surface relative pb-20">
-          {children}
-          <BottomNav />
-        </div>
+        <AuthProvider>
+          <div className="mx-auto max-w-md min-h-screen bg-surface relative pb-20">
+            {children}
+            <BottomNav />
+          </div>
+        </AuthProvider>
       </body>
     </html>
   );

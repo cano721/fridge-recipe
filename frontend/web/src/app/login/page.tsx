@@ -2,29 +2,30 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { api } from '@/lib/api';
+import { useAuth } from '@/lib/auth-context';
 
 export default function LoginPage() {
   const router = useRouter();
+  const { login, isLoggedIn } = useAuth();
+  const [loading, setLoading] = useState(false);
+
+  // Already logged in, redirect to home
+  if (isLoggedIn) {
+    router.replace('/');
+    return null;
+  }
 
   const handleSocialLogin = (provider: string) => {
     alert(`${provider} 로그인은 준비 중입니다`);
   };
 
-  const [loading, setLoading] = useState(false);
-
   const handleGuestLogin = async () => {
     setLoading(true);
     try {
-      const res = await api.login('demo', 'demo-access-token');
-      if (res.success && res.data?.accessToken) {
-        api.setToken(res.data.accessToken);
+      const success = await login('demo', 'demo-access-token');
+      if (success) {
         router.push('/');
       }
-    } catch {
-      // fallback: set demo token for offline use
-      api.setToken('demo-guest-token');
-      router.push('/');
     } finally {
       setLoading(false);
     }
@@ -47,9 +48,8 @@ export default function LoginPage() {
         </p>
       </div>
 
-      {/* Social Login Buttons - 48dp height, 12dp radius */}
+      {/* Social Login Buttons */}
       <div className="w-full space-y-3">
-        {/* 카카오 */}
         <button
           onClick={() => handleSocialLogin('카카오')}
           className="w-full h-12 flex items-center justify-center gap-2 rounded-xl font-medium text-sm text-[#3C1E1E] active:scale-[0.97] transition-transform"
@@ -59,7 +59,6 @@ export default function LoginPage() {
           카카오로 시작하기
         </button>
 
-        {/* Google */}
         <button
           onClick={() => handleSocialLogin('Google')}
           className="w-full h-12 flex items-center justify-center gap-2 rounded-xl border-[1.5px] border-outline bg-white font-medium text-sm text-on-surface active:scale-[0.97] transition-transform"
@@ -69,7 +68,6 @@ export default function LoginPage() {
           Google로 시작하기
         </button>
 
-        {/* Apple */}
         <button
           onClick={() => handleSocialLogin('Apple')}
           className="w-full h-12 flex items-center justify-center gap-2 rounded-xl bg-black font-medium text-sm text-white active:scale-[0.97] transition-transform"

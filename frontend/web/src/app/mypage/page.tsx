@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
+import { useAuth } from '@/lib/auth-context';
 import {
   User,
   Bell,
@@ -14,6 +15,7 @@ import {
   ChevronRight,
   LogOut,
 } from 'lucide-react';
+import EmptyState from '@/components/ui/EmptyState';
 
 interface UserStats {
   ingredientCount: number;
@@ -32,6 +34,7 @@ const menuItems = [
 
 export default function MyPage() {
   const router = useRouter();
+  const { isLoggedIn, isLoading: authLoading, user, logout } = useAuth();
   const [stats, setStats] = useState<UserStats>({
     ingredientCount: 0,
     savedRecipeCount: 0,
@@ -39,6 +42,8 @@ export default function MyPage() {
   });
 
   useEffect(() => {
+    if (!isLoggedIn) return;
+
     const fetchStats = async () => {
       try {
         const [ingredientsRes, bookmarksRes] = await Promise.all([
@@ -55,7 +60,7 @@ export default function MyPage() {
       }
     };
     fetchStats();
-  }, []);
+  }, [isLoggedIn]);
 
   const handleMenuClick = (href: string) => {
     if (href === '#') return;
@@ -63,13 +68,32 @@ export default function MyPage() {
   };
 
   const handleLogout = () => {
-    api.clearToken();
+    logout();
     router.push('/login');
   };
 
+  // Auth guard
+  if (!authLoading && !isLoggedIn) {
+    return (
+      <div className="min-h-screen bg-surface-variant">
+        <header className="bg-surface px-6 pt-12 pb-6" style={{ boxShadow: 'var(--shadow-level-1)' }}>
+          <h1 className="text-[22px] font-semibold text-on-surface">마이페이지</h1>
+        </header>
+        <div className="px-4 py-8">
+          <EmptyState
+            icon={<span className="text-6xl">🔒</span>}
+            title="로그인이 필요해요"
+            description="마이페이지를 이용하려면 로그인해주세요"
+            ctaLabel="로그인하기"
+            onCtaClick={() => router.push('/login')}
+          />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-surface-variant">
-      {/* Header */}
       <header className="bg-surface px-6 pt-12 pb-6" style={{ boxShadow: 'var(--shadow-level-1)' }}>
         <h1 className="text-[22px] font-semibold text-on-surface">마이페이지</h1>
       </header>
@@ -84,8 +108,8 @@ export default function MyPage() {
             <User className="w-10 h-10 text-primary" />
           </div>
           <div className="text-center">
-            <p className="text-base font-bold text-on-surface">게스트</p>
-            <p className="text-sm text-on-surface-variant mt-0.5">guest@example.com</p>
+            <p className="text-base font-bold text-on-surface">{user?.nickname || '게스트'}</p>
+            <p className="text-sm text-on-surface-variant mt-0.5">{user?.email || ''}</p>
           </div>
         </section>
 

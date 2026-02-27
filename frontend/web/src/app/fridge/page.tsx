@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
+import { useAuth } from '@/lib/auth-context';
 import { Ingredient, IngredientMaster, StorageType } from '@/types';
 import { getCategoryEmoji, getStorageLabel, getStorageEmoji } from '@/lib/utils';
 import ExpiryBadge from '@/components/ui/ExpiryBadge';
@@ -99,7 +100,6 @@ function AddIngredientModal({ onClose, onAdded }: AddModalProps) {
         style={{ boxShadow: 'var(--shadow-level-5)' }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Handle */}
         <div className="w-8 h-1 bg-on-surface-variant/40 rounded-full mx-auto mb-3" style={{ marginTop: '12px' }} />
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-bold text-on-surface">식재료 추가</h3>
@@ -108,7 +108,6 @@ function AddIngredientModal({ onClose, onAdded }: AddModalProps) {
           </button>
         </div>
 
-        {/* Search */}
         <div className="relative">
           <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant" />
           <input
@@ -123,7 +122,6 @@ function AddIngredientModal({ onClose, onAdded }: AddModalProps) {
           />
         </div>
 
-        {/* Search results */}
         {searching && (
           <p className="text-xs text-on-surface-variant text-center py-2">검색 중...</p>
         )}
@@ -147,7 +145,6 @@ function AddIngredientModal({ onClose, onAdded }: AddModalProps) {
           </ul>
         )}
 
-        {/* Form */}
         {selected && (
           <form onSubmit={handleSubmit} className="space-y-3">
             <div className="flex items-center gap-2 p-3 bg-primary-50 rounded-xl">
@@ -226,12 +223,17 @@ function AddIngredientModal({ onClose, onAdded }: AddModalProps) {
 
 export default function FridgePage() {
   const router = useRouter();
+  const { isLoggedIn, isLoading: authLoading } = useAuth();
   const [selectedStorage, setSelectedStorage] = useState<StorageTab>(null);
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
 
   const fetchIngredients = useCallback(async () => {
+    if (!isLoggedIn) {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     try {
       const res = await api.getIngredients(selectedStorage ?? undefined);
@@ -242,11 +244,11 @@ export default function FridgePage() {
     } finally {
       setLoading(false);
     }
-  }, [selectedStorage]);
+  }, [selectedStorage, isLoggedIn]);
 
   useEffect(() => {
-    fetchIngredients();
-  }, [fetchIngredients]);
+    if (!authLoading) fetchIngredients();
+  }, [fetchIngredients, authLoading]);
 
   async function handleDelete(id: number) {
     try {
@@ -257,15 +259,33 @@ export default function FridgePage() {
     }
   }
 
+  // Auth guard
+  if (!authLoading && !isLoggedIn) {
+    return (
+      <div className="min-h-screen bg-surface-variant">
+        <header className="bg-surface px-5 pt-12 pb-4" style={{ boxShadow: 'var(--shadow-level-1)' }}>
+          <h1 className="text-[22px] font-semibold text-on-surface">내 냉장고</h1>
+        </header>
+        <div className="px-4 py-8">
+          <EmptyState
+            icon={<span className="text-6xl">🔒</span>}
+            title="로그인이 필요해요"
+            description="내 냉장고에 식재료를 등록하려면 로그인해주세요"
+            ctaLabel="로그인하기"
+            onCtaClick={() => router.push('/login')}
+          />
+        </div>
+      </div>
+    );
+  }
+
   const grouped = groupByCategory(ingredients);
 
   return (
     <div className="min-h-screen bg-surface-variant">
-      {/* Header */}
       <header className="bg-surface px-5 pt-12 pb-4" style={{ boxShadow: 'var(--shadow-level-1)' }}>
         <h1 className="text-[22px] font-semibold text-on-surface">내 냉장고</h1>
 
-        {/* Storage tabs - Chip style: 8dp radius */}
         <div className="flex gap-2 mt-4 overflow-x-auto pb-1 scrollbar-none">
           {storageTabs.map((tab) => (
             <button
@@ -347,7 +367,6 @@ export default function FridgePage() {
         )}
       </div>
 
-      {/* FAB: 56x56dp, radius 16dp, bg primaryContainer */}
       <button
         onClick={() => setShowModal(true)}
         className="fixed bottom-24 z-40 w-14 h-14 rounded-2xl flex items-center justify-center active:scale-95 active:bg-primary-200 transition-all"
@@ -361,7 +380,6 @@ export default function FridgePage() {
         <Plus size={24} className="text-primary-900" />
       </button>
 
-      {/* Add ingredient modal */}
       {showModal && (
         <AddIngredientModal
           onClose={() => setShowModal(false)}
