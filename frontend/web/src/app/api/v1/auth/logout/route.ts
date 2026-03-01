@@ -1,20 +1,24 @@
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { isSupabaseConfigured, getServiceSupabase } from '@/lib/supabase';
-import { requireUserId, successResponse, errorResponse } from '@/lib/auth';
+import { requireUserId, errorResponse } from '@/lib/auth';
 import crypto from 'crypto';
 
 export async function POST(request: NextRequest) {
   try {
-    if (!isSupabaseConfigured) return successResponse({ message: '로그아웃 되었습니다.' });
+    if (!isSupabaseConfigured) {
+      const response = NextResponse.json({ success: true, data: { message: '로그아웃 되었습니다.' } });
+      response.cookies.set('refreshToken', '', { maxAge: 0, path: '/api/v1/auth' });
+      return response;
+    }
 
     const userId = requireUserId(request);
     const supabase = getServiceSupabase();
 
-    let body: { refreshToken?: string } = {};
-    try { body = await request.json(); } catch { /* no body */ }
+    // 쿠키에서 refreshToken 읽기 (단일 기기 로그아웃)
+    const refreshToken = request.cookies.get('refreshToken')?.value;
 
-    if (body.refreshToken) {
-      const tokenHash = crypto.createHash('sha256').update(body.refreshToken).digest('hex');
+    if (refreshToken) {
+      const tokenHash = crypto.createHash('sha256').update(refreshToken).digest('hex');
       await supabase.from('refresh_tokens')
         .update({ revoked_at: new Date().toISOString() })
         .eq('user_id', userId).eq('token_hash', tokenHash);
@@ -24,7 +28,9 @@ export async function POST(request: NextRequest) {
         .eq('user_id', userId).is('revoked_at', null);
     }
 
-    return successResponse({ message: '로그아웃 되었습니다.' });
+    const response = NextResponse.json({ success: true, data: { message: '로그아웃 되었습니다.' } });
+    response.cookies.set('refreshToken', '', { maxAge: 0, path: '/api/v1/auth' });
+    return response;
   } catch (e) {
     if ((e as Error).name === 'AuthError') return errorResponse('UNAUTHORIZED', (e as Error).message, 401);
     console.error('[auth/logout] Unexpected error:', e);

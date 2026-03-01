@@ -1,6 +1,6 @@
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { isSupabaseConfigured, getServiceSupabase } from '@/lib/supabase';
-import { createToken, successResponse, errorResponse } from '@/lib/auth';
+import { createToken, errorResponse, REFRESH_TOKEN_COOKIE_OPTIONS } from '@/lib/auth';
 import { mockUser } from '@/lib/mock-data';
 import crypto from 'crypto';
 
@@ -58,7 +58,12 @@ export async function POST(request: NextRequest) {
     // Mock mode
     if (!isSupabaseConfigured) {
       const token = createToken({ userId: mockUser.id, email: mockUser.email });
-      return successResponse({ accessToken: token, refreshToken: 'mock-refresh-token', expiresIn: 3600 });
+      const response = NextResponse.json({
+        success: true,
+        data: { accessToken: token, expiresIn: 3600 },
+      });
+      response.cookies.set('refreshToken', 'mock-refresh-token', REFRESH_TOKEN_COOKIE_OPTIONS);
+      return response;
     }
 
     const verified = await verifyOAuthToken(provider as Provider, accessToken);
@@ -93,7 +98,12 @@ export async function POST(request: NextRequest) {
       expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
     });
 
-    return successResponse({ accessToken: jwtAccessToken, refreshToken, expiresIn });
+    const response = NextResponse.json({
+      success: true,
+      data: { accessToken: jwtAccessToken, expiresIn },
+    });
+    response.cookies.set('refreshToken', refreshToken, REFRESH_TOKEN_COOKIE_OPTIONS);
+    return response;
   } catch (e) {
     console.error('[auth/login] Unexpected error:', e);
     return errorResponse('INTERNAL_ERROR', '서버 오류가 발생했습니다.', 500);

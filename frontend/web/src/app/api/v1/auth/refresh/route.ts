@@ -1,17 +1,30 @@
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { isSupabaseConfigured, getServiceSupabase } from '@/lib/supabase';
-import { createToken, successResponse, errorResponse } from '@/lib/auth';
+import { createToken, errorResponse, REFRESH_TOKEN_COOKIE_OPTIONS } from '@/lib/auth';
 import { mockUser } from '@/lib/mock-data';
 import crypto from 'crypto';
 
 export async function POST(request: NextRequest) {
   try {
-    const { refreshToken, deviceInfo } = await request.json();
+    // refreshToken을 쿠키에서 읽기 (기존 body 방식도 하위호환)
+    let refreshToken = request.cookies.get('refreshToken')?.value;
+    if (!refreshToken) {
+      try {
+        const body = await request.json();
+        refreshToken = body.refreshToken;
+      } catch { /* no body */ }
+    }
+
     if (!refreshToken) return errorResponse('VALIDATION_FAILED', 'refreshToken은 필수입니다.');
 
     if (!isSupabaseConfigured) {
       const token = createToken({ userId: mockUser.id, email: mockUser.email });
-      return successResponse({ accessToken: token, refreshToken: 'mock-refresh-token-new', expiresIn: 3600 });
+      const response = NextResponse.json({
+        success: true,
+        data: { accessToken: token, expiresIn: 3600 },
+      });
+      response.cookies.set('refreshToken', 'mock-refresh-token-new', REFRESH_TOKEN_COOKIE_OPTIONS);
+      return response;
     }
 
     const tokenHash = crypto.createHash('sha256').update(refreshToken).digest('hex');
@@ -35,11 +48,16 @@ export async function POST(request: NextRequest) {
     const newTokenHash = crypto.createHash('sha256').update(newRefreshToken).digest('hex');
 
     await supabase.from('refresh_tokens').insert({
-      user_id: user.id, token_hash: newTokenHash, device_info: deviceInfo || null,
+      user_id: user.id, token_hash: newTokenHash,
       expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
     });
 
-    return successResponse({ accessToken: newAccessToken, refreshToken: newRefreshToken, expiresIn });
+    const response = NextResponse.json({
+      success: true,
+      data: { accessToken: newAccessToken, expiresIn },
+    });
+    response.cookies.set('refreshToken', newRefreshToken, REFRESH_TOKEN_COOKIE_OPTIONS);
+    return response;
   } catch (e) {
     console.error('[auth/refresh] Unexpected error:', e);
     return errorResponse('INTERNAL_ERROR', '서버 오류가 발생했습니다.', 500);

@@ -1,6 +1,6 @@
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { exchangeAuthCode } from '@/lib/auth-code-store';
-import { errorResponse, successResponse } from '@/lib/auth';
+import { errorResponse, REFRESH_TOKEN_COOKIE_OPTIONS } from '@/lib/auth';
 
 export async function POST(request: NextRequest) {
   try {
@@ -16,11 +16,16 @@ export async function POST(request: NextRequest) {
       return errorResponse('CODE_EXPIRED', '코드가 만료되었거나 유효하지 않습니다.', 400);
     }
 
-    return successResponse({
-      accessToken: tokens.accessToken,
-      refreshToken: tokens.refreshToken,
-      expiresIn: 3600,
+    const response = NextResponse.json({
+      success: true,
+      data: { accessToken: tokens.accessToken, expiresIn: 3600 },
     });
+
+    if (tokens.refreshToken) {
+      response.cookies.set('refreshToken', tokens.refreshToken, REFRESH_TOKEN_COOKIE_OPTIONS);
+    }
+
+    return response;
   } catch {
     return errorResponse('EXCHANGE_FAILED', '토큰 교환에 실패했습니다.', 500);
   }

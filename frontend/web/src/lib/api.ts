@@ -2,6 +2,7 @@ const API_BASE = '/api/v1';
 
 class ApiClient {
   private token: string | null = null;
+  private refreshPromise: Promise<boolean> | null = null;
 
   setToken(token: string) {
     this.token = token;
@@ -24,6 +25,29 @@ class ApiClient {
     }
   }
 
+  private async refreshTokens(): Promise<boolean> {
+    if (typeof window === 'undefined') return false;
+
+    try {
+      // refreshToken은 httpOnly 쿠키로 자동 전송됨
+      const response = await fetch(`${API_BASE}/auth/refresh`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      if (!response.ok) return false;
+
+      const data = await response.json();
+      if (data.success && data.data) {
+        this.setToken(data.data.accessToken);
+        return true;
+      }
+      return false;
+    } catch {
+      return false;
+    }
+  }
+
   private async request<T>(path: string, options: RequestInit = {}): Promise<T> {
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
@@ -39,6 +63,38 @@ class ApiClient {
       ...options,
       headers,
     });
+
+    // 401 감지: refresh 요청 자체는 재시도하지 않음 (무한루프 방지)
+    if (response.status === 401 && !path.includes('/auth/refresh')) {
+      // 동시 다발적 401에 대한 중복 refresh 방지 (Promise 공유)
+      if (!this.refreshPromise) {
+        this.refreshPromise = this.refreshTokens().finally(() => {
+          this.refreshPromise = null;
+        });
+      }
+
+      const refreshed = await this.refreshPromise;
+      if (refreshed) {
+        // 새 토큰으로 원래 요청 재시도
+        const retryHeaders: Record<string, string> = {
+          ...headers,
+          'Authorization': `Bearer ${this.getToken()}`,
+        };
+        const retryResponse = await fetch(`${API_BASE}${path}`, { ...options, headers: retryHeaders });
+        if (!retryResponse.ok) {
+          const error = await retryResponse.json().catch(() => ({}));
+          return { success: false, error: error?.error || { code: String(retryResponse.status), message: retryResponse.statusText } } as T;
+        }
+        return retryResponse.json();
+      }
+
+      // refresh 실패: 토큰 클리어 + 로그인 리다이렉트
+      this.clearToken();
+      if (typeof window !== 'undefined') {
+        window.location.href = '/login';
+      }
+      return { success: false, error: { code: '401', message: 'Session expired' } } as T;
+    }
 
     if (!response.ok) {
       const error = await response.json().catch(() => ({}));
@@ -60,6 +116,10 @@ class ApiClient {
 
   addIngredient(body: { ingredientId: number; quantity?: number; unit?: string; expiryDate?: string; storageType?: string; memo?: string }) {
     return this.request<any>('/ingredients', { method: 'POST', body: JSON.stringify(body) });
+  }
+
+  updateIngredient(id: number, body: { quantity?: number; unit?: string; expiryDate?: string; storageType?: string; memo?: string }) {
+    return this.request<any>(`/ingredients/${id}`, { method: 'PUT', body: JSON.stringify(body) });
   }
 
   deleteIngredient(id: number) {
@@ -163,7 +223,7 @@ class ApiClient {
     return this.request<any>('/notifications');
   }
 
-  // Scan — 즉시 결과 반환 (폴링 불필요)
+  // Scan
   submitScan(type: 'receipt' | 'photo', imageBase64: string) {
     return this.request<any>('/scan', {
       method: 'POST',

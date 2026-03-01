@@ -79,6 +79,16 @@ export class AuthError extends Error {
   }
 }
 
+const REFRESH_TOKEN_COOKIE_OPTIONS = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === 'production',
+  sameSite: 'strict' as const,
+  path: '/api/v1/auth',
+  maxAge: 30 * 24 * 60 * 60, // 30 days
+};
+
+export { REFRESH_TOKEN_COOKIE_OPTIONS };
+
 export function jsonResponse(data: unknown, status = 200) {
   return Response.json(data, { status });
 }

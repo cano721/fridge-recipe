@@ -34,9 +34,7 @@ function CallbackContent() {
       .then((data) => {
         if (data.success && data.data) {
           api.setToken(data.data.accessToken);
-          if (data.data.refreshToken) {
-            localStorage.setItem('refreshToken', data.data.refreshToken);
-          }
+          // refreshToken은 httpOnly 쿠키로 자동 설정됨
           refreshUser().then(() => {
             router.replace('/');
           });
