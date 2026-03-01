@@ -45,6 +45,9 @@ export function verifyToken(token: string): Record<string, unknown> | null {
       return null;
     }
 
+    const header = JSON.parse(Buffer.from(parts[0], 'base64url').toString());
+    if (header.alg !== 'HS256' || header.typ !== 'JWT') return null;
+
     const payload = JSON.parse(Buffer.from(parts[1], 'base64url').toString());
     if (payload.exp && payload.exp < Math.floor(Date.now() / 1000)) return null;
 

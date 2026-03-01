@@ -41,6 +41,7 @@ export async function POST(request: NextRequest) {
 
     return successResponse({ accessToken: newAccessToken, refreshToken: newRefreshToken, expiresIn });
   } catch (e) {
-    return errorResponse('INTERNAL_ERROR', (e as Error).message, 500);
+    console.error('[auth/refresh] Unexpected error:', e);
+    return errorResponse('INTERNAL_ERROR', '서버 오류가 발생했습니다.', 500);
   }
 }

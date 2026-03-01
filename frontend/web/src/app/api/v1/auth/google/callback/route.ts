@@ -8,6 +8,7 @@ const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '';
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || '';
 
 function getBaseUrl(request: NextRequest) {
+  if (process.env.NEXT_PUBLIC_APP_URL) return process.env.NEXT_PUBLIC_APP_URL;
   const host = request.headers.get('host') || 'localhost:3000';
   const proto = request.headers.get('x-forwarded-proto') || 'http';
   return `${proto}://${host}`;
