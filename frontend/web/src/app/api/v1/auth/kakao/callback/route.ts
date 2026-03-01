@@ -78,7 +78,7 @@ export async function GET(request: NextRequest) {
     // Upsert user
     if (!isSupabaseConfigured) {
       const jwt = createToken({ userId: 1, email: 'kakao@demo.app' });
-      const authCode = storeAuthCode(jwt, '');
+      const authCode = await storeAuthCode(jwt, '');
       const res = NextResponse.redirect(`${baseUrl}/auth/callback?code=${authCode}`);
       return clearStateCookie(res);
     }
@@ -108,7 +108,7 @@ export async function GET(request: NextRequest) {
       expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
     });
 
-    const authCode = storeAuthCode(jwt, refreshToken);
+    const authCode = await storeAuthCode(jwt, refreshToken);
     const res = NextResponse.redirect(`${baseUrl}/auth/callback?code=${authCode}`);
     return clearStateCookie(res);
   } catch {

@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
       return errorResponse('INVALID_CODE', '유효하지 않은 코드입니다.', 400);
     }
 
-    const tokens = exchangeAuthCode(code);
+    const tokens = await exchangeAuthCode(code);
     if (!tokens) {
       return errorResponse('CODE_EXPIRED', '코드가 만료되었거나 유효하지 않습니다.', 400);
     }
