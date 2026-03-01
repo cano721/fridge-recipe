@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
 import EmptyState from '@/components/ui/EmptyState';
-import { Camera, Receipt, Check, Plus, Loader2, ArrowLeft, X } from 'lucide-react';
+import { Camera, Receipt, Check, Plus, Loader2, ArrowLeft } from 'lucide-react';
+import { uploadImage } from '@/lib/cloudinary';
 
 type ScanType = 'receipt' | 'photo';
 type ScanStep = 'select' | 'preview' | 'processing' | 'results';
@@ -56,6 +57,9 @@ export default function ScanPage() {
     setProcessing(true);
 
     try {
+      // Cloudinary에 스캔 이미지 백업 저장 (비동기, 실패해도 스캔 진행)
+      uploadImage(imagePreview, 'scan').catch(() => {});
+
       const submitRes = await api.submitScan(scanType, imagePreview);
       if (!submitRes?.data) {
         throw new Error('Failed to submit scan');

@@ -104,8 +104,12 @@ export default function MyPage() {
           className="bg-surface rounded-2xl p-6 flex flex-col items-center gap-3"
           style={{ boxShadow: 'var(--shadow-level-1)' }}
         >
-          <div className="w-20 h-20 rounded-full bg-primary-100 flex items-center justify-center">
-            <User className="w-10 h-10 text-primary" />
+          <div className="w-20 h-20 rounded-full bg-primary-100 flex items-center justify-center overflow-hidden">
+            {user?.profileImage ? (
+              <img src={user.profileImage} alt="프로필" className="w-full h-full object-cover" />
+            ) : (
+              <User className="w-10 h-10 text-primary" />
+            )}
           </div>
           <div className="text-center">
             <p className="text-base font-bold text-on-surface">{user?.nickname || '게스트'}</p>

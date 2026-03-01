@@ -92,7 +92,7 @@ class ApiClient {
     return this.request<any>('/users/me');
   }
 
-  updateProfile(body: { nickname: string }) {
+  updateProfile(body: { nickname?: string; profileImage?: string }) {
     return this.request<any>('/users/me', { method: 'PUT', body: JSON.stringify(body) });
   }
 
