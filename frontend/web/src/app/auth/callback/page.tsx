@@ -19,15 +19,34 @@ function CallbackContent() {
   const { refreshUser } = useAuth();
 
   useEffect(() => {
-    const token = searchParams.get('token');
-    if (token) {
-      api.setToken(token);
-      refreshUser().then(() => {
-        router.replace('/');
-      });
-    } else {
-      router.replace('/login?error=no_token');
+    const code = searchParams.get('code');
+    if (!code) {
+      router.replace('/login?error=no_code');
+      return;
     }
+
+    fetch('/api/v1/auth/exchange', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && data.data) {
+          api.setToken(data.data.accessToken);
+          if (data.data.refreshToken) {
+            localStorage.setItem('refreshToken', data.data.refreshToken);
+          }
+          refreshUser().then(() => {
+            router.replace('/');
+          });
+        } else {
+          router.replace('/login?error=exchange_failed');
+        }
+      })
+      .catch(() => {
+        router.replace('/login?error=exchange_failed');
+      });
   }, [searchParams, router, refreshUser]);
 
   return (

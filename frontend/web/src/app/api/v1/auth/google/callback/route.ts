@@ -1,6 +1,7 @@
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { isSupabaseConfigured, getServiceSupabase } from '@/lib/supabase';
 import { createToken } from '@/lib/auth';
+import { storeAuthCode } from '@/lib/auth-code-store';
 import crypto from 'crypto';
 
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '';
@@ -17,10 +18,23 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const code = searchParams.get('code');
   const error = searchParams.get('error');
+  const state = searchParams.get('state');
+
+  // CSRF: state 검증
+  const savedState = request.cookies.get('oauth_state')?.value;
+  if (!state || !savedState || state !== savedState) {
+    return Response.redirect(`${baseUrl}/login?error=invalid_state`);
+  }
 
   if (error || !code) {
     return Response.redirect(`${baseUrl}/login?error=google_denied`);
   }
+
+  // state 쿠키 제거
+  const clearStateCookie = (res: NextResponse) => {
+    res.cookies.set('oauth_state', '', { maxAge: 0, path: '/' });
+    return res;
+  };
 
   try {
     // Exchange code for access token
@@ -61,7 +75,9 @@ export async function GET(request: NextRequest) {
     // Upsert user
     if (!isSupabaseConfigured) {
       const jwt = createToken({ userId: 1, email: 'google@demo.app' });
-      return Response.redirect(`${baseUrl}/auth/callback?token=${jwt}`);
+      const authCode = storeAuthCode(jwt, '');
+      const res = NextResponse.redirect(`${baseUrl}/auth/callback?code=${authCode}`);
+      return clearStateCookie(res);
     }
 
     const supabase = getServiceSupabase();
@@ -89,7 +105,9 @@ export async function GET(request: NextRequest) {
       expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
     });
 
-    return Response.redirect(`${baseUrl}/auth/callback?token=${jwt}`);
+    const authCode = storeAuthCode(jwt, refreshToken);
+    const res = NextResponse.redirect(`${baseUrl}/auth/callback?code=${authCode}`);
+    return clearStateCookie(res);
   } catch {
     return Response.redirect(`${baseUrl}/login?error=google_error`);
   }

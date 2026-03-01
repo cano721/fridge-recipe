@@ -1,4 +1,5 @@
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import crypto from 'crypto';
 
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '';
 
@@ -17,6 +18,8 @@ export async function GET(request: NextRequest) {
   const baseUrl = getBaseUrl(request);
   const redirectUri = `${baseUrl}/api/v1/auth/google/callback`;
 
+  const state = crypto.randomBytes(32).toString('hex');
+
   const params = new URLSearchParams({
     client_id: GOOGLE_CLIENT_ID,
     redirect_uri: redirectUri,
@@ -24,7 +27,17 @@ export async function GET(request: NextRequest) {
     scope: 'openid email profile',
     access_type: 'offline',
     prompt: 'consent',
+    state,
   });
 
-  return Response.redirect(`https://accounts.google.com/o/oauth2/v2/auth?${params}`);
+  const response = NextResponse.redirect(`https://accounts.google.com/o/oauth2/v2/auth?${params}`);
+  response.cookies.set('oauth_state', state, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: 300,
+    path: '/',
+  });
+
+  return response;
 }

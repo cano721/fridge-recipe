@@ -1,4 +1,5 @@
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import crypto from 'crypto';
 
 const KAKAO_CLIENT_ID = process.env.KAKAO_CLIENT_ID || '';
 
@@ -17,12 +18,24 @@ export async function GET(request: NextRequest) {
   const baseUrl = getBaseUrl(request);
   const redirectUri = `${baseUrl}/api/v1/auth/kakao/callback`;
 
+  const state = crypto.randomBytes(32).toString('hex');
+
   const params = new URLSearchParams({
     client_id: KAKAO_CLIENT_ID,
     redirect_uri: redirectUri,
     response_type: 'code',
     scope: 'profile_nickname,account_email',
+    state,
   });
 
-  return Response.redirect(`https://kauth.kakao.com/oauth/authorize?${params}`);
+  const response = NextResponse.redirect(`https://kauth.kakao.com/oauth/authorize?${params}`);
+  response.cookies.set('oauth_state', state, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: 300,
+    path: '/',
+  });
+
+  return response;
 }
